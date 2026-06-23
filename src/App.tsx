@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
-import { supabase } from './lib/supabase';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { useMediaCache } from './hooks/useMediaCache';
 import { 
   Folder, 
@@ -2901,6 +2901,56 @@ const RotateCw = (props: any) => (
 // ----------------------------------------------------
 export const App: React.FC = () => {
   const isCapacitor = typeof (window as any).Capacitor !== 'undefined';
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        backgroundColor: '#0f172a',
+        color: '#f8fafc',
+        fontFamily: 'sans-serif',
+        padding: '20px',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          backgroundColor: '#1e293b',
+          borderRadius: '12px',
+          padding: '30px',
+          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
+          maxWidth: '500px',
+          border: '1px solid #334155'
+        }}>
+          <h1 style={{ color: '#ef4444', marginBottom: '16px', fontSize: '24px', fontWeight: 'bold' }}>
+            Configuração do Supabase Ausente
+          </h1>
+          <p style={{ color: '#94a3b8', lineHeight: '1.6', marginBottom: '24px', fontSize: '15px' }}>
+            As credenciais do Supabase não foram configuradas no ambiente de compilação (build-time) do seu Easypanel.
+          </p>
+          <div style={{
+            textAlign: 'left',
+            backgroundColor: '#0f172a',
+            padding: '16px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontFamily: 'monospace',
+            color: '#38bdf8',
+            marginBottom: '24px',
+            border: '1px solid #334155'
+          }}>
+            VITE_SUPABASE_URL<br/>
+            VITE_SUPABASE_ANON_KEY
+          </div>
+          <p style={{ color: '#cbd5e1', fontSize: '15px', lineHeight: '1.5' }}>
+            <strong>Como resolver:</strong> Adicione estas duas variáveis na aba <strong>Environment</strong> do seu app no Easypanel, salve e clique em <strong>Deploy / Rebuild</strong> para recompilar o aplicativo.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthProvider>

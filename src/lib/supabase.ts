@@ -1,13 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Essas variáveis de ambiente devem ser configuradas no arquivo .env
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const rawUrl = import.meta.env.VITE_SUPABASE_URL;
+const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
-    'Supabase credentials missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
-  );
-}
+// Use placeholder values to prevent createClient from throwing a fatal initialization error
+// if the environment variables are not configured in the host build system yet.
+export const isSupabaseConfigured = !!(rawUrl && rawKey);
+
+const supabaseUrl = rawUrl || 'https://placeholder-project.supabase.co';
+const supabaseAnonKey = rawKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
