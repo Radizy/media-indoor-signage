@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mídia Indoor TV</string>
+    <string name="title_activity_main">Mídia Indoor TV</string>
+    <string name="package_name">com.mediaindoorsignage.tv</string>
+    <string name="custom_url_scheme">com.mediaindoorsignage.tv</string>
+</resources>
