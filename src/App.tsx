@@ -708,9 +708,10 @@ const CMSDashboard: React.FC = () => {
       </div>
 
       {/* HEADER DE NAVEGAÇÃO SUPERIOR */}
-      <header className="glass-panel border-b border-slate-800/60 px-6 py-4 flex items-center justify-between sticky top-0 z-40 shadow-lg">
-        <div className="flex items-center gap-3">
-          <Folder className="h-5 w-5 text-amber-500" />
+      <header className="glass-panel border-b border-slate-800/60 px-4 sm:px-6 py-4 flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-40 shadow-lg">
+        <div className="flex items-center justify-between w-full md:w-auto gap-3">
+          <div className="flex items-center gap-3">
+            <Folder className="h-5 w-5 text-amber-500" />
           <div className="flex items-center gap-2 text-sm font-semibold">
             {view === 'list' ? (
               <>
@@ -733,25 +734,26 @@ const CMSDashboard: React.FC = () => {
             )}
           </div>
         </div>
+      </div>
 
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
           <button
             onClick={() => setView('list')}
             disabled={view === 'list'}
-            className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 border border-slate-800/80 disabled:opacity-40 disabled:cursor-not-allowed px-3.5 py-2 rounded-xl text-xs font-bold text-slate-200 shadow-sm transition active:scale-95"
+            className="flex items-center justify-center gap-1 bg-slate-900 hover:bg-slate-800 border border-slate-800/80 disabled:opacity-40 disabled:cursor-not-allowed px-3.5 py-2 rounded-xl text-xs font-bold text-slate-200 shadow-sm transition active:scale-95 flex-1 md:flex-none"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Voltar
+            <ArrowLeft className="h-3.5 w-3.5" /> <span>Voltar</span>
           </button>
           
           <button
             onClick={handleCriarPlaylist}
-            className="flex items-center gap-1 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400 hover:from-indigo-500 hover:to-indigo-300 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-indigo-950/20 transition hover:-translate-y-0.5 active:scale-95"
+            className="flex items-center justify-center gap-1 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400 hover:from-indigo-500 hover:to-indigo-300 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-indigo-950/20 transition hover:-translate-y-0.5 active:scale-95 flex-1 md:flex-none"
           >
-            <Plus className="h-3.5 w-3.5" /> Criar Playlist
+            <Plus className="h-3.5 w-3.5" /> <span>Criar Playlist</span>
           </button>
 
           {view === 'detail' && (
-            <label className="flex items-center gap-1 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 hover:from-emerald-500 hover:to-emerald-300 border border-emerald-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-emerald-950/20 transition hover:-translate-y-0.5 active:scale-95 cursor-pointer">
+            <label className="flex items-center justify-center gap-1 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 hover:from-emerald-500 hover:to-emerald-300 border border-emerald-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-emerald-950/20 transition hover:-translate-y-0.5 active:scale-95 cursor-pointer flex-1 md:flex-none">
               <input
                 type="file"
                 accept="image/png, image/jpeg, image/webp, video/mp4"
@@ -773,25 +775,25 @@ const CMSDashboard: React.FC = () => {
 
           <button
             onClick={() => setShowProfileModal(true)}
-            className="flex items-center gap-1 bg-gradient-to-r from-violet-600 via-violet-500 to-violet-400 hover:from-violet-500 hover:to-violet-300 border border-violet-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-violet-950/20 transition hover:-translate-y-0.5 active:scale-95"
+            className="flex items-center justify-center gap-1 bg-gradient-to-r from-violet-600 via-violet-500 to-violet-400 hover:from-violet-500 hover:to-violet-300 border border-violet-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-violet-950/20 transition hover:-translate-y-0.5 active:scale-95 flex-1 md:flex-none"
           >
-            <User className="h-3.5 w-3.5" /> Minha Conta
+            <User className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Minha Conta</span><span className="sm:hidden">Conta</span>
           </button>
 
           <button
             onClick={logout}
-            className="flex items-center gap-1 bg-slate-905 hover:bg-red-950/30 border border-red-900/30 px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 transition-all"
+            className="flex items-center justify-center gap-1 bg-slate-905 hover:bg-red-950/30 border border-red-900/30 px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 transition-all flex-1 md:flex-none"
           >
-            <LogOut className="h-3.5 w-3.5" /> Sair
+            <LogOut className="h-3.5 w-3.5" /> <span>Sair</span>
           </button>
         </div>
       </header>
 
       {/* CONTAINER PRINCIPAL */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-6">
         
         {/* BANNER DE BOAS-VINDAS E ORIENTAÇÕES */}
-        <div className="glass-panel border border-slate-800/80 rounded-2xl p-6 shadow-xl space-y-4 relative overflow-hidden group">
+        <div className="glass-panel border border-slate-800/80 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-44 h-44 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none -z-10 group-hover:bg-indigo-500/10 transition-all duration-500" />
           
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-850">
@@ -803,7 +805,7 @@ const CMSDashboard: React.FC = () => {
                 Gerencie suas mídias e monitore o status de suas telas de forma simples.
               </p>
             </div>
-            <div className="flex items-center gap-2 bg-slate-950/80 border border-slate-800/80 px-3.5 py-2.5 rounded-xl shrink-0 hover:border-indigo-500/20 transition-all duration-300">
+            <div className="flex items-center justify-between w-full md:w-auto gap-2 bg-slate-950/80 border border-slate-800/80 px-3.5 py-2.5 rounded-xl shrink-0 hover:border-indigo-500/20 transition-all duration-300">
               <div className="text-left">
                 <p className="text-[10px] uppercase font-black text-indigo-400 tracking-wider">Token de Ativação TV</p>
                 <p className="text-sm font-mono font-black text-indigo-300 tracking-widest uppercase select-all">{licenca?.codigo_ativacao}</p>
@@ -840,7 +842,7 @@ const CMSDashboard: React.FC = () => {
               
               <button
                 onClick={() => setShowSpecs(!showSpecs)}
-                className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition"
+                className="flex items-center justify-center gap-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition w-full md:w-auto"
               >
                 {showSpecs ? (
                   <>
@@ -883,17 +885,17 @@ const CMSDashboard: React.FC = () => {
                     📱 Vertical (Modo Retrato)
                   </h4>
                   <div className="divide-y divide-slate-850/60 text-xs">
-                    <div className="py-2.5 flex justify-between items-center">
+                    <div className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <span className="font-semibold text-slate-300">1080p (Full HD - Recomendado)</span>
-                      <span className="bg-indigo-950/60 border border-indigo-900/50 text-indigo-300 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg">1080px x 1920px</span>
+                      <span className="bg-indigo-950/60 border border-indigo-900/50 text-indigo-300 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg w-fit">1080px x 1920px</span>
                     </div>
-                    <div className="py-2.5 flex justify-between items-center">
+                    <div className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <span className="font-semibold text-slate-350">2K (Quad HD)</span>
-                      <span className="bg-slate-900 border border-slate-800 text-slate-400 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg">1440px x 2560px</span>
+                      <span className="bg-slate-900 border border-slate-800 text-slate-400 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg w-fit">1440px x 2560px</span>
                     </div>
-                    <div className="py-2.5 flex justify-between items-center">
+                    <div className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <span className="font-semibold text-slate-350">4K (Ultra HD)</span>
-                      <span className="bg-slate-900 border border-slate-800 text-slate-400 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg">2160px x 3840px</span>
+                      <span className="bg-slate-900 border border-slate-800 text-slate-400 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg w-fit">2160px x 3840px</span>
                     </div>
                   </div>
                 </div>
@@ -915,11 +917,11 @@ const CMSDashboard: React.FC = () => {
             )}
           </div>
 
-          <div className="flex gap-2 pt-1">
-            <a href="https://microcosmo.io" target="_blank" rel="noreferrer" className="flex items-center gap-1 bg-slate-900/60 hover:bg-slate-855 border border-slate-800 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-200 transition shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-2 pt-1 w-full">
+            <a href="https://microcosmo.io" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1 bg-slate-900/60 hover:bg-slate-855 border border-slate-800 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-200 transition shadow-sm w-full sm:w-auto">
               <HelpCircle className="h-3.5 w-3.5 text-indigo-400" /> Como otimizar mídias
             </a>
-            <button className="flex items-center gap-1 bg-slate-950/40 border border-slate-900/40 text-slate-500 opacity-40 px-3.5 py-2.5 rounded-xl text-xs font-bold transition cursor-not-allowed">
+            <button className="flex items-center justify-center gap-1 bg-slate-950/40 border border-slate-900/40 text-slate-500 opacity-40 px-3.5 py-2.5 rounded-xl text-xs font-bold transition cursor-not-allowed w-full sm:w-auto">
               Ajuda (em breve)
             </button>
           </div>
@@ -945,11 +947,11 @@ const CMSDashboard: React.FC = () => {
                 {playlists.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between p-5 hover:bg-indigo-500/[0.02] transition-all duration-300 border-b border-slate-850 last:border-0 hover:-translate-y-0.5 shadow-sm hover:shadow-indigo-950/5 group"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 hover:bg-indigo-500/[0.02] transition-all duration-300 border-b border-slate-850 last:border-0 hover:-translate-y-0.5 shadow-sm hover:shadow-indigo-950/5 gap-4 group"
                   >
                     <div 
                       onClick={() => openPlaylist(p)}
-                      className="flex items-center gap-3 cursor-pointer overflow-hidden flex-1"
+                      className="flex items-center gap-3 cursor-pointer overflow-hidden w-full sm:flex-1"
                     >
                       <div className="flex items-center gap-3 overflow-hidden flex-wrap">
                         <span className="text-sm font-bold text-slate-200 truncate group-hover:text-indigo-400 transition-colors duration-200" title={p.nome}>
@@ -963,7 +965,7 @@ const CMSDashboard: React.FC = () => {
                             handleRenamePlaylist(p);
                           }}
                           title="Renomear Playlist"
-                          className="text-slate-550 hover:text-indigo-450 p-1 hover:bg-slate-900 rounded-lg transition shrink-0"
+                          className="text-slate-550 hover:text-indigo-455 p-1 hover:bg-slate-900 rounded-lg transition shrink-0"
                         >
                           <Edit2 className="h-3.5 w-3.5" />
                         </button>
@@ -1007,12 +1009,12 @@ const CMSDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 ml-4 shrink-0">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t border-slate-900/60 pt-3 sm:border-t-0 sm:pt-0 sm:ml-4 shrink-0">
                       {/* Botão de Copiar Código da Playlist */}
                       <button
                         onClick={() => handleCopyCode(p.codigo)}
                         title="Copiar Código da Playlist"
-                        className="bg-slate-950/80 hover:bg-slate-900 border border-slate-850 p-2.5 rounded-xl text-slate-400 hover:text-slate-100 transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-slate-850 p-2.5 rounded-xl text-slate-400 hover:text-slate-100 transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm active:scale-95 flex-1 sm:flex-none"
                       >
                         <span className="text-[10px] font-bold text-slate-400 font-mono hidden md:inline tracking-wider">
                           CÓDIGO: {p.codigo}
@@ -1028,7 +1030,7 @@ const CMSDashboard: React.FC = () => {
                       <button
                         onClick={() => openPlaylist(p)}
                         title="Editar Itens"
-                        className="bg-slate-950/80 hover:bg-slate-900 border border-cyan-900/40 hover:border-cyan-800 p-2.5 rounded-xl text-cyan-400 hover:bg-cyan-950/20 transition-all duration-200 shadow-sm active:scale-95"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-cyan-900/40 hover:border-cyan-800 p-2.5 rounded-xl text-cyan-400 hover:bg-cyan-950/20 transition-all duration-200 shadow-sm active:scale-95 flex items-center justify-center flex-1 sm:flex-none"
                       >
                         <Edit2 className="h-4 w-4" />
                       </button>
@@ -1037,7 +1039,7 @@ const CMSDashboard: React.FC = () => {
                       <button
                         onClick={() => handleDeletarPlaylist(p.id)}
                         title="Deletar Playlist"
-                        className="bg-slate-950/80 hover:bg-slate-900 border border-red-900/40 hover:border-red-800 p-2.5 rounded-xl text-red-400 hover:bg-red-950/20 transition-all duration-200 shadow-sm active:scale-95"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-red-900/40 hover:border-red-800 p-2.5 rounded-xl text-red-400 hover:bg-red-950/20 transition-all duration-200 shadow-sm active:scale-95 flex items-center justify-center flex-1 sm:flex-none"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -1070,9 +1072,9 @@ const CMSDashboard: React.FC = () => {
                 {playlistItens.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-5 hover:bg-indigo-500/[0.02] transition-all duration-300 border-b border-slate-850 last:border-0 hover:-translate-y-0.5 shadow-sm hover:shadow-indigo-950/5 group"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 hover:bg-indigo-500/[0.02] transition-all duration-300 border-b border-slate-850 last:border-0 hover:-translate-y-0.5 shadow-sm hover:shadow-indigo-950/5 gap-4 group"
                   >
-                    <div className="flex items-center gap-3 overflow-hidden flex-1">
+                    <div className="flex items-center gap-3 overflow-hidden w-full sm:flex-1">
                       <div className="w-10 h-10 rounded-xl bg-slate-950/80 border border-slate-850 flex items-center justify-center shrink-0 shadow-inner group-hover:border-indigo-500/20 transition-all duration-300">
                         {item.midias.tipo === 'video' ? (
                           <FileVideo className="h-5 w-5 text-red-400" />
@@ -1081,7 +1083,7 @@ const CMSDashboard: React.FC = () => {
                         )}
                       </div>
                       <div className="flex items-center gap-3 overflow-hidden flex-wrap">
-                        <span className="text-xs font-bold text-slate-200 truncate group-hover:text-indigo-400 transition-colors duration-200" title={item.midias.nome}>
+                        <span className="text-xs font-bold text-slate-200 truncate group-hover:text-indigo-400 transition-colors duration-200 max-w-[200px] sm:max-w-xs" title={item.midias.nome}>
                           {item.midias.nome}
                         </span>
                         <span className="text-[10px] text-slate-500 font-semibold font-mono shrink-0">
@@ -1099,14 +1101,14 @@ const CMSDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 ml-4 shrink-0">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t border-slate-900/60 pt-3 sm:border-t-0 sm:pt-0 sm:ml-4 shrink-0">
                       {/* Botão de Download */}
                       <a
                         href={item.midias.url_arquivo}
                         target="_blank"
                         rel="noreferrer"
                         title="Visualizar / Download"
-                        className="bg-slate-950/80 hover:bg-slate-900 border border-slate-850 p-2.5 rounded-xl text-slate-400 hover:text-slate-100 transition-all duration-200 flex items-center justify-center shadow-sm active:scale-95"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-slate-850 p-2.5 rounded-xl text-slate-400 hover:text-slate-100 transition-all duration-200 flex items-center justify-center shadow-sm active:scale-95 flex-1 sm:flex-none"
                       >
                         <Download className="h-4 w-4" />
                       </a>
@@ -1115,7 +1117,7 @@ const CMSDashboard: React.FC = () => {
                       <button
                         onClick={() => handleEditItem(item)}
                         title={item.midias.tipo === 'imagem' ? 'Editar Tempo' : 'Editar Nome'}
-                        className="bg-slate-950/80 hover:bg-slate-900 border border-cyan-900/40 hover:border-cyan-800 p-2.5 rounded-xl text-cyan-400 hover:bg-cyan-950/20 transition-all duration-200 shadow-sm active:scale-95"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-cyan-900/40 hover:border-cyan-800 p-2.5 rounded-xl text-cyan-400 hover:bg-cyan-950/20 transition-all duration-200 shadow-sm active:scale-95 flex items-center justify-center flex-1 sm:flex-none"
                       >
                         <Edit2 className="h-4 w-4" />
                       </button>
@@ -1124,7 +1126,7 @@ const CMSDashboard: React.FC = () => {
                       <button
                         onClick={() => handleDeletarItem(item.id, item.midias.url_arquivo, item.midias.id)}
                         title="Remover da Playlist"
-                        className="bg-slate-950/80 hover:bg-slate-900 border border-red-900/40 hover:border-red-800 p-2.5 rounded-xl text-red-400 hover:bg-red-950/20 transition-all duration-200 shadow-sm active:scale-95"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-red-900/40 hover:border-red-800 p-2.5 rounded-xl text-red-400 hover:bg-red-950/20 transition-all duration-200 shadow-sm active:scale-95 flex items-center justify-center flex-1 sm:flex-none"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -1202,16 +1204,16 @@ const CMSDashboard: React.FC = () => {
                         </span>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => handleToggleTvOrientation(tv)}
-                          className="flex-1 flex items-center justify-center gap-1 bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 py-2 px-3 rounded-xl text-xs font-bold transition shadow-sm active:scale-95 hover:border-slate-700"
+                          className="flex items-center justify-center gap-1 bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 py-2 px-3 rounded-xl text-xs font-bold transition shadow-sm active:scale-95 hover:border-slate-700 w-full"
                         >
                           <RotateCw className="h-3.5 w-3.5" /> Girar Tela
                         </button>
                         <button
                           onClick={() => handleDisconnectTv(tv.id)}
-                          className="flex items-center justify-center gap-1 bg-red-950/20 hover:bg-red-900/30 text-red-400 border border-red-900/20 py-2 px-3 rounded-xl text-xs font-bold transition shadow-sm active:scale-95"
+                          className="flex items-center justify-center gap-1 bg-red-950/20 hover:bg-red-900/30 text-red-400 border border-red-900/20 py-2 px-3 rounded-xl text-xs font-bold transition shadow-sm active:scale-95 w-full"
                         >
                           <X className="h-3.5 w-3.5" /> Desconectar
                         </button>
@@ -1289,21 +1291,21 @@ const CMSDashboard: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-slate-850 justify-end">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-850 justify-end">
                 <button
                   type="button"
                   onClick={() => {
                     setShowProfileModal(false);
                     setProfileUsername(licenca.username || '');
                   }}
-                  className="bg-slate-900 hover:bg-slate-850 text-slate-355 font-bold text-xs py-2 px-4.5 rounded-xl transition active:scale-95 border border-slate-800"
+                  className="bg-slate-900 hover:bg-slate-855 text-slate-355 font-bold text-xs py-2.5 px-4.5 rounded-xl transition active:scale-95 border border-slate-800 w-full sm:w-auto text-center"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={profileSaving}
-                  className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400 hover:from-indigo-500 hover:to-indigo-300 border border-indigo-500/20 text-white font-bold text-xs py-2 px-5 rounded-xl transition shadow-md shadow-indigo-950/30 flex items-center gap-1.5 active:scale-95"
+                  className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400 hover:from-indigo-500 hover:to-indigo-300 border border-indigo-500/20 text-white font-bold text-xs py-2.5 px-5 rounded-xl transition shadow-md shadow-indigo-950/30 flex items-center justify-center gap-1.5 active:scale-95 w-full sm:w-auto"
                 >
                   {profileSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Salvar Alterações'}
                 </button>
@@ -2862,18 +2864,18 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f5f8fa] text-slate-800 font-sans flex flex-col">
-      <header className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between sticky top-0 z-40 text-white shadow-md">
+      <header className="bg-slate-900 border-b border-slate-800 px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-3 items-center justify-between sticky top-0 z-40 text-white shadow-md">
         <div className="flex items-center gap-3">
           <div className="relative flex items-center justify-center w-10 h-7 border-2 border-indigo-400 rounded bg-indigo-900">
             <svg className="h-3 w-3 text-white fill-current" viewBox="0 0 24 24">
               <polygon points="5 3 19 12 5 21" />
             </svg>
           </div>
-          <span className="text-sm font-bold tracking-wider">Mídia Indoor - PAINEL ADMINISTRADOR</span>
+          <span className="text-sm font-bold tracking-wider text-center sm:text-left">Mídia Indoor - PAINEL ADMINISTRADOR</span>
         </div>
         <button
           onClick={logout}
-          className="flex items-center gap-1.5 bg-red-650 hover:bg-red-700 px-3.5 py-2 rounded-lg text-xs font-bold text-white shadow-sm transition"
+          className="flex items-center justify-center gap-1.5 bg-red-650 hover:bg-red-700 px-3.5 py-2 rounded-lg text-xs font-bold text-white shadow-sm transition w-full sm:w-auto"
         >
           <LogOut className="h-3.5 w-3.5" /> Sair do Admin
         </button>
@@ -2913,19 +2915,19 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
-          <div className="px-6 py-4 border-b border-slate-150 flex flex-col sm:flex-row sm:items-center sm:justify-between bg-slate-50 gap-4">
+          <div className="px-6 py-4 border-b border-slate-150 flex flex-col md:flex-row md:items-center md:justify-between bg-slate-50 gap-4">
             <h3 className="font-bold text-sm text-slate-800">Listagem de Licenças de Clientes</h3>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por código..."
-                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-700 focus:border-indigo-500 focus:outline-none w-56 font-mono uppercase"
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-700 focus:border-indigo-500 focus:outline-none w-full sm:w-56 font-mono uppercase"
               />
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-1 bg-[#4f46e5] hover:bg-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-sm transition whitespace-nowrap"
+                className="flex items-center justify-center gap-1 bg-[#4f46e5] hover:bg-indigo-700 px-3 py-2 sm:py-1.5 rounded-lg text-xs font-bold text-white shadow-sm transition whitespace-nowrap w-full sm:w-auto"
               >
                 <Plus className="h-3.5 w-3.5" /> Criar Nova Licença
               </button>
@@ -2946,7 +2948,7 @@ const AdminDashboard: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto w-full max-w-[100vw]">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-150 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
@@ -3098,18 +3100,18 @@ const AdminDashboard: React.FC = () => {
                 />
               </div>
 
-              <div className="flex gap-3 pt-3 border-t border-slate-100 justify-end">
+              <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100 justify-end">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs py-2 px-4 rounded-lg transition"
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs py-2.5 px-4 rounded-lg transition w-full sm:w-auto text-center"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="bg-[#4f46e5] hover:bg-indigo-700 text-white font-bold text-xs py-2 px-5 rounded-lg transition shadow-sm flex items-center gap-1.5"
+                  className="bg-[#4f46e5] hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-5 rounded-lg transition shadow-sm flex items-center justify-center gap-1.5 w-full sm:w-auto"
                 >
                   {actionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Criar Licença'}
                 </button>
@@ -3207,18 +3209,18 @@ const AdminDashboard: React.FC = () => {
                 />
               </div>
 
-              <div className="flex gap-3 pt-3 border-t border-slate-100 justify-end">
+              <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100 justify-end">
                 <button
                   type="button"
                   onClick={() => { setShowEditModal(false); setEditingLicenca(null); }}
-                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs py-2 px-4 rounded-lg transition"
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs py-2.5 px-4 rounded-lg transition w-full sm:w-auto text-center"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="bg-[#4f46e5] hover:bg-indigo-700 text-white font-bold text-xs py-2 px-5 rounded-lg transition shadow-sm flex items-center gap-1.5"
+                  className="bg-[#4f46e5] hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-5 rounded-lg transition shadow-sm flex items-center justify-center gap-1.5 w-full sm:w-auto"
                 >
                   {actionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Salvar Alterações'}
                 </button>
