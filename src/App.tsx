@@ -699,6 +699,33 @@ const CMSDashboard: React.FC = () => {
     }
   };
 
+  const handleToggleDiaSemana = async (itemId: string, diasAtuais: number[], diaClicado: number) => {
+    let novosDias: number[];
+    if (diasAtuais.includes(diaClicado)) {
+      novosDias = diasAtuais.filter((d) => d !== diaClicado);
+    } else {
+      novosDias = [...diasAtuais, diaClicado].sort();
+    }
+
+    try {
+      const { error: updateError } = await supabase
+        .from('playlist_itens')
+        .update({ dias_semana: novosDias })
+        .eq('id', itemId);
+
+      if (updateError) throw updateError;
+
+      setPlaylistItens((prev) =>
+        prev.map((item) =>
+          item.id === itemId ? { ...item, dias_semana: novosDias } : item
+        )
+      );
+    } catch (err: any) {
+      console.error('Erro ao atualizar dias da semana:', err);
+      alert('Falha ao atualizar dias de exibição: ' + err.message);
+    }
+  };
+
   // Copia o código da playlist para pareamento
   const handleCopyCode = (codigo: string) => {
     navigator.clipboard.writeText(codigo);
@@ -1163,26 +1190,51 @@ const CMSDashboard: React.FC = () => {
                           <FileImage className="h-5 w-5 text-emerald-400" />
                         )}
                       </div>
-                      <div className="flex items-center gap-3 overflow-hidden flex-wrap">
-                        <span className="text-xs font-bold text-slate-200 truncate group-hover:text-indigo-400 transition-colors duration-200 max-w-[200px] sm:max-w-xs" title={item.midias.nome}>
-                          {item.midias.nome}
-                        </span>
-                        <span className="text-[10px] text-slate-500 font-semibold font-mono shrink-0">
-                          {isYouTubeUrl(item.midias.url_arquivo) ? '(YouTube)' : `(${formatBytes(item.midias.tamanho_bytes)})`}
-                        </span>
-                        {item.midias.tipo === 'imagem' ? (
-                          <span className="bg-indigo-950/40 border border-indigo-900/40 text-indigo-300 text-[10px] px-2 py-0.5 rounded-lg font-bold font-mono shrink-0">
-                            Exibição: {item.duracao_segundos}s
+                      <div className="flex flex-col gap-1.5 overflow-hidden">
+                        <div className="flex items-center gap-3 overflow-hidden flex-wrap">
+                          <span className="text-xs font-bold text-slate-200 truncate group-hover:text-indigo-400 transition-colors duration-200 max-w-[200px] sm:max-w-xs" title={item.midias.nome}>
+                            {item.midias.nome}
                           </span>
-                        ) : isYouTubeUrl(item.midias.url_arquivo) ? (
-                          <span className="bg-red-950/60 border border-red-900/50 text-red-300 text-[10px] px-2 py-0.5 rounded-lg font-bold font-mono shrink-0">
-                            Vídeo (YouTube)
+                          <span className="text-[10px] text-slate-500 font-semibold font-mono shrink-0">
+                            {isYouTubeUrl(item.midias.url_arquivo) ? '(YouTube)' : `(${formatBytes(item.midias.tamanho_bytes)})`}
                           </span>
-                        ) : (
-                          <span className="bg-slate-950 border border-slate-850 text-slate-400 text-[10px] px-2 py-0.5 rounded-lg font-bold font-mono shrink-0">
-                            Vídeo (MP4)
-                          </span>
-                        )}
+                          {item.midias.tipo === 'imagem' ? (
+                            <span className="bg-indigo-950/40 border border-indigo-900/40 text-indigo-300 text-[10px] px-2 py-0.5 rounded-lg font-bold font-mono shrink-0">
+                              Exibição: {item.duracao_segundos}s
+                            </span>
+                          ) : isYouTubeUrl(item.midias.url_arquivo) ? (
+                            <span className="bg-red-950/60 border border-red-900/50 text-red-300 text-[10px] px-2 py-0.5 rounded-lg font-bold font-mono shrink-0">
+                              Vídeo (YouTube)
+                            </span>
+                          ) : (
+                            <span className="bg-slate-950 border border-slate-850 text-slate-400 text-[10px] px-2 py-0.5 rounded-lg font-bold font-mono shrink-0">
+                              Vídeo (MP4)
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Exibir em:</span>
+                          <div className="flex gap-0.5">
+                            {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((diaLabel, diaIdx) => {
+                              const ativo = item.dias_semana ? item.dias_semana.includes(diaIdx) : true;
+                              return (
+                                <button
+                                  key={diaIdx}
+                                  onClick={() => handleToggleDiaSemana(item.id, item.dias_semana || [0,1,2,3,4,5,6], diaIdx)}
+                                  className={`w-4 h-4 text-[9px] font-black rounded flex items-center justify-center transition-all ${
+                                    ativo 
+                                      ? 'bg-indigo-650 text-white font-black hover:bg-indigo-700' 
+                                      : 'bg-slate-950 text-slate-650 hover:bg-slate-900 border border-slate-850'
+                                  }`}
+                                  title={`${diaLabel} (Clique para alternar)`}
+                                >
+                                  {diaLabel}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
