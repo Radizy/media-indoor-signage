@@ -36,19 +36,19 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onStart() {
+    public void onStart() {
         super.onStart();
         isAppVisible = true;
     }
 
     @Override
-    protected void onStop() {
+    public void onStop() {
         super.onStop();
         isAppVisible = false;
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         isAppVisible = false;
     }
