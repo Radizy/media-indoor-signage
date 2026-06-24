@@ -613,6 +613,69 @@ const CMSDashboard: React.FC = () => {
     }
   };
 
+  const handleAddYoutubeLink = async () => {
+    if (!currentPlaylist || !licenca) return;
+
+    const url = prompt('Insira a URL ou ID do vídeo do YouTube:\n(Ex: https://www.youtube.com/watch?v=dQw4w9WgXcQ)');
+    if (!url || !url.trim()) return;
+
+    const cleanUrl = url.trim();
+    // Validar URL do YouTube
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = cleanUrl.match(regExp);
+    const videoId = (cleanUrl.length === 11) ? cleanUrl : (match && match[2].length === 11 ? match[2] : '');
+
+    if (!videoId) {
+      alert('Link do YouTube inválido. Certifique-se de colar um link válido de vídeo ou o ID de 11 caracteres.');
+      return;
+    }
+
+    const nome = prompt('Nome do vídeo (opcional):', 'Vídeo do YouTube');
+    const finalNome = nome && nome.trim() ? nome.trim() : 'Vídeo do YouTube';
+
+    setUploading(true);
+
+    try {
+      // 1. Salva na tabela midias
+      const { data: midia, error: dbError } = await supabase
+        .from('midias')
+        .insert({
+          licenca_id: licenca.id,
+          url_arquivo: cleanUrl,
+          tipo: 'video', // 'video' por conta do check constraint
+          nome: finalNome,
+          tamanho_bytes: 0,
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
+      // 2. Associa ao item da playlist
+      const proximaOrdem = playlistItens.length > 0 
+        ? Math.max(...playlistItens.map(i => i.ordem)) + 1 
+        : 1;
+
+      const { error: itemError } = await supabase
+        .from('playlist_itens')
+        .insert({
+          playlist_id: currentPlaylist.id,
+          midia_id: midia.id,
+          ordem: proximaOrdem,
+          duracao_segundos: 10,
+        });
+
+      if (itemError) throw itemError;
+
+      fetchPlaylistItens(currentPlaylist.id);
+    } catch (err: any) {
+      console.error(err);
+      alert('Erro ao adicionar link do YouTube: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleDeletarItem = async (_itemId: string, url: string, midiaId: string) => {
     if (!window.confirm('Tem certeza que deseja excluir esta mídia desta playlist?')) return;
 
@@ -737,52 +800,65 @@ const CMSDashboard: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
-          <button
-            onClick={() => setView('list')}
-            disabled={view === 'list'}
-            className="flex items-center justify-center gap-1 bg-slate-900 hover:bg-slate-800 border border-slate-800/80 disabled:opacity-40 disabled:cursor-not-allowed px-3.5 py-2 rounded-xl text-xs font-bold text-slate-200 shadow-sm transition active:scale-95 flex-1 md:flex-none"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> <span>Voltar</span>
-          </button>
+          {view === 'detail' && (
+            <button
+              onClick={() => setView('list')}
+              className="flex items-center justify-center gap-1 bg-slate-900 hover:bg-slate-800 border border-slate-800/80 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-200 shadow-sm transition active:scale-95 flex-1 md:flex-none min-w-[100px]"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> <span>Voltar</span>
+            </button>
+          )}
           
-          <button
-            onClick={handleCriarPlaylist}
-            className="flex items-center justify-center gap-1 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400 hover:from-indigo-500 hover:to-indigo-300 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-indigo-950/20 transition hover:-translate-y-0.5 active:scale-95 flex-1 md:flex-none"
-          >
-            <Plus className="h-3.5 w-3.5" /> <span>Criar Playlist</span>
-          </button>
+          {view === 'list' && (
+            <button
+              onClick={handleCriarPlaylist}
+              className="flex items-center justify-center gap-1 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400 hover:from-indigo-500 hover:to-indigo-300 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-indigo-950/20 transition hover:-translate-y-0.5 active:scale-95 flex-1 md:flex-none min-w-[130px]"
+            >
+              <Plus className="h-3.5 w-3.5" /> <span>Criar Playlist</span>
+            </button>
+          )}
 
           {view === 'detail' && (
-            <label className="flex items-center justify-center gap-1 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 hover:from-emerald-500 hover:to-emerald-300 border border-emerald-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-emerald-950/20 transition hover:-translate-y-0.5 active:scale-95 cursor-pointer flex-1 md:flex-none">
-              <input
-                type="file"
-                accept="image/png, image/jpeg, image/webp, video/mp4"
-                onChange={handleUploadFile}
+            <>
+              <label className="flex items-center justify-center gap-1 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 hover:from-emerald-500 hover:to-emerald-300 border border-emerald-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-emerald-950/20 transition hover:-translate-y-0.5 active:scale-95 cursor-pointer flex-1 md:flex-none min-w-[120px]">
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp, video/mp4"
+                  onChange={handleUploadFile}
+                  disabled={uploading}
+                  className="hidden"
+                />
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Subindo...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-3.5 w-3.5" /> Subir Mídia
+                  </>
+                )}
+              </label>
+
+              <button
+                onClick={handleAddYoutubeLink}
                 disabled={uploading}
-                className="hidden"
-              />
-              {uploading ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Subindo...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-3.5 w-3.5" /> Subir Mídia
-                </>
-              )}
-            </label>
+                className="flex items-center justify-center gap-1 bg-gradient-to-r from-red-600 via-red-500 to-red-400 hover:from-red-500 hover:to-red-300 border border-red-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-red-950/20 transition hover:-translate-y-0.5 active:scale-95 flex-1 md:flex-none disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px]"
+              >
+                <Plus className="h-3.5 w-3.5" /> Adicionar YouTube
+              </button>
+            </>
           )}
 
           <button
             onClick={() => setShowProfileModal(true)}
-            className="flex items-center justify-center gap-1 bg-gradient-to-r from-violet-600 via-violet-500 to-violet-400 hover:from-violet-500 hover:to-violet-300 border border-violet-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-violet-950/20 transition hover:-translate-y-0.5 active:scale-95 flex-1 md:flex-none"
+            className="flex items-center justify-center gap-1 bg-gradient-to-r from-violet-600 via-violet-500 to-violet-400 hover:from-violet-500 hover:to-violet-300 border border-violet-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-violet-950/20 transition hover:-translate-y-0.5 active:scale-95 flex-1 md:flex-none min-w-[120px]"
           >
             <User className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Minha Conta</span><span className="sm:hidden">Conta</span>
           </button>
 
           <button
             onClick={logout}
-            className="flex items-center justify-center gap-1 bg-slate-905 hover:bg-red-950/30 border border-red-900/30 px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 transition-all flex-1 md:flex-none"
+            className="flex items-center justify-center gap-1 bg-slate-905 hover:bg-red-950/30 border border-red-900/30 px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 transition-all flex-1 md:flex-none min-w-[90px]"
           >
             <LogOut className="h-3.5 w-3.5" /> <span>Sair</span>
           </button>
@@ -1076,7 +1152,11 @@ const CMSDashboard: React.FC = () => {
                   >
                     <div className="flex items-center gap-3 overflow-hidden w-full sm:flex-1">
                       <div className="w-10 h-10 rounded-xl bg-slate-950/80 border border-slate-850 flex items-center justify-center shrink-0 shadow-inner group-hover:border-indigo-500/20 transition-all duration-300">
-                        {item.midias.tipo === 'video' ? (
+                        {isYouTubeUrl(item.midias.url_arquivo) ? (
+                          <svg className="h-5 w-5 text-red-500 fill-current" viewBox="0 0 24 24">
+                            <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.108C19.52 3.5 12 3.5 12 3.5s-7.52 0-9.388.555a3.002 3.002 0 0 0-2.11 2.108C0 8.03 0 12 0 12s0 3.97.502 5.837a3.003 3.003 0 0 0 2.11 2.108C4.48 20.5 12 20.5 12 20.5s7.52 0 9.388-.555a3.002 3.002 0 0 0 2.11-2.108C24 15.97 24 12 24 12s0-3.97-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                          </svg>
+                        ) : item.midias.tipo === 'video' ? (
                           <FileVideo className="h-5 w-5 text-red-400" />
                         ) : (
                           <FileImage className="h-5 w-5 text-emerald-400" />
@@ -1087,11 +1167,15 @@ const CMSDashboard: React.FC = () => {
                           {item.midias.nome}
                         </span>
                         <span className="text-[10px] text-slate-500 font-semibold font-mono shrink-0">
-                          ({formatBytes(item.midias.tamanho_bytes)})
+                          {isYouTubeUrl(item.midias.url_arquivo) ? '(YouTube)' : `(${formatBytes(item.midias.tamanho_bytes)})`}
                         </span>
                         {item.midias.tipo === 'imagem' ? (
                           <span className="bg-indigo-950/40 border border-indigo-900/40 text-indigo-300 text-[10px] px-2 py-0.5 rounded-lg font-bold font-mono shrink-0">
                             Exibição: {item.duracao_segundos}s
+                          </span>
+                        ) : isYouTubeUrl(item.midias.url_arquivo) ? (
+                          <span className="bg-red-950/60 border border-red-900/50 text-red-300 text-[10px] px-2 py-0.5 rounded-lg font-bold font-mono shrink-0">
+                            Vídeo (YouTube)
                           </span>
                         ) : (
                           <span className="bg-slate-950 border border-slate-850 text-slate-400 text-[10px] px-2 py-0.5 rounded-lg font-bold font-mono shrink-0">
@@ -1107,10 +1191,16 @@ const CMSDashboard: React.FC = () => {
                         href={item.midias.url_arquivo}
                         target="_blank"
                         rel="noreferrer"
-                        title="Visualizar / Download"
+                        title={isYouTubeUrl(item.midias.url_arquivo) ? "Assistir no YouTube" : "Visualizar / Download"}
                         className="bg-slate-950/80 hover:bg-slate-900 border border-slate-850 p-2.5 rounded-xl text-slate-400 hover:text-slate-100 transition-all duration-200 flex items-center justify-center shadow-sm active:scale-95 flex-1 sm:flex-none"
                       >
-                        <Download className="h-4 w-4" />
+                        {isYouTubeUrl(item.midias.url_arquivo) ? (
+                          <svg className="h-4 w-4 text-red-500 fill-current" viewBox="0 0 24 24">
+                            <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.108C19.52 3.5 12 3.5 12 3.5s-7.52 0-9.388.555a3.002 3.002 0 0 0-2.11 2.108C0 8.03 0 12 0 12s0 3.97.502 5.837a3.003 3.003 0 0 0 2.11 2.108C4.48 20.5 12 20.5 12 20.5s7.52 0 9.388-.555a3.002 3.002 0 0 0 2.11-2.108C24 15.97 24 12 24 12s0-3.97-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                          </svg>
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
                       </a>
 
                       {/* Botão de Editar configurações de item */}
@@ -1142,7 +1232,7 @@ const CMSDashboard: React.FC = () => {
       {/* MODAL DE CONTROLE E PAREAMENTO DA TV */}
       {showTvModal && activeTvPlaylistId && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="glass-panel rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100 border border-slate-800/80">
+          <div className="glass-panel rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100 border border-slate-800/80 max-h-[90vh]">
             <header className="px-5 py-4 border-b border-slate-850 flex items-center justify-between bg-slate-950/40 backdrop-blur-sm">
               <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
                 <Monitor className="h-4.5 w-4.5 text-indigo-400" />
@@ -1159,7 +1249,7 @@ const CMSDashboard: React.FC = () => {
               </button>
             </header>
 
-            <div className="p-5 space-y-4">
+            <div className="p-5 space-y-4 overflow-y-auto">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Playlist: <span className="bg-indigo-950/50 border border-indigo-900/30 text-indigo-300 text-[10px] px-2 py-0.5 rounded-lg font-bold ml-1 font-mono">
                   {playlists.find(p => p.id === activeTvPlaylistId)?.nome}
@@ -1242,7 +1332,7 @@ const CMSDashboard: React.FC = () => {
       {/* MODAL MINHA CONTA */}
       {showProfileModal && licenca && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="glass-panel rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100 border border-slate-800/80">
+          <div className="glass-panel rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100 border border-slate-800/80 max-h-[90vh]">
             <header className="px-5 py-4 border-b border-slate-850 flex items-center justify-between bg-slate-950/40 backdrop-blur-sm">
               <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
                 <User className="h-4.5 w-4.5 text-indigo-400" />
@@ -1259,7 +1349,7 @@ const CMSDashboard: React.FC = () => {
               </button>
             </header>
 
-            <form onSubmit={handleSaveProfile} className="p-5 space-y-5">
+            <form onSubmit={handleSaveProfile} className="p-5 space-y-5 overflow-y-auto">
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 ml-1">Nome de Usuário</label>
                 <input
@@ -1665,6 +1755,129 @@ const VideoPlayerItem: React.FC<{
   );
 };
 
+const isYouTubeUrl = (url: string) => {
+  if (!url) return false;
+  return url.includes('youtube.com') || url.includes('youtu.be') || url.trim().length === 11;
+};
+
+// Componente para reprodução de vídeos do YouTube
+const YouTubePlayerItem: React.FC<{
+  videoUrl: string;
+  isActive: boolean;
+  onVideoEnded: () => void;
+}> = ({ videoUrl, isActive, onVideoEnded }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const playerRef = React.useRef<any>(null);
+  const [apiReady, setApiReady] = useState(!!(window as any).YT);
+
+  const getVideoId = (url: string) => {
+    if (!url) return '';
+    const cleanUrl = url.trim();
+    if (cleanUrl.length === 11) return cleanUrl;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = cleanUrl.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : '';
+  };
+
+  const videoId = useMemo(() => getVideoId(videoUrl), [videoUrl]);
+
+  useEffect(() => {
+    if ((window as any).YT) {
+      setApiReady(true);
+      return;
+    }
+
+    const previousReady = (window as any).onYouTubeIframeAPIReady;
+    (window as any).onYouTubeIframeAPIReady = () => {
+      if (previousReady) previousReady();
+      setApiReady(true);
+    };
+
+    if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!apiReady || !videoId || !containerRef.current) return;
+
+    let player: any = null;
+
+    const createPlayer = () => {
+      if (!containerRef.current) return;
+      containerRef.current.innerHTML = '<div class="w-full h-full"></div>';
+      const targetEl = containerRef.current.firstChild;
+
+      player = new (window as any).YT.Player(targetEl, {
+        videoId: videoId,
+        playerVars: {
+          autoplay: isActive ? 1 : 0,
+          mute: 1,
+          controls: 0,
+          rel: 0,
+          showinfo: 0,
+          modestbranding: 1,
+          iv_load_policy: 3,
+          autohide: 1,
+          fs: 0,
+          playsinline: 1,
+          enablejsapi: 1,
+        },
+        events: {
+          onReady: (event: any) => {
+            playerRef.current = event.target;
+            if (isActive) {
+              event.target.playVideo();
+            } else {
+              event.target.pauseVideo();
+            }
+          },
+          onStateChange: (event: any) => {
+            if (event.data === 0) {
+              onVideoEnded();
+            }
+          }
+        }
+      });
+    };
+
+    const timer = setTimeout(createPlayer, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (player && typeof player.destroy === 'function') {
+        player.destroy();
+      }
+      playerRef.current = null;
+    };
+  }, [apiReady, videoId]);
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player || typeof player.playVideo !== 'function') return;
+
+    if (isActive) {
+      player.seekTo(0, true);
+      player.playVideo();
+    } else {
+      player.pauseVideo();
+    }
+  }, [isActive]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={`absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-500 ease-in-out ${
+        isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
+      }`}
+      style={{ transform: 'translate3d(0, 0, 0)', backfaceVisibility: 'hidden' }}
+    />
+  );
+};
+
 interface PlayerItemProps {
   item: any;
   isActive: boolean;
@@ -1686,6 +1899,16 @@ const PlayerItem: React.FC<PlayerItemProps> = ({ item, isActive, isNext, cachedU
   }, [cachedUrl, isActive]);
 
   if (!isActive && !isNext) return null;
+
+  if (isYouTubeUrl(item.midias?.url_arquivo)) {
+    return (
+      <YouTubePlayerItem
+        videoUrl={item.midias.url_arquivo}
+        isActive={isActive}
+        onVideoEnded={onVideoEnded}
+      />
+    );
+  }
 
   if (tipo === 'imagem') {
     return (
@@ -2948,32 +3171,132 @@ const AdminDashboard: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto w-full max-w-[100vw]">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-150 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                    <th className="px-6 py-3">Usuário (E-mail)</th>
-                    <th className="px-6 py-3">Token (Código)</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3">Validade</th>
-                    <th className="px-6 py-3 text-center">Playlists (Qtd/Limite)</th>
-                    <th className="px-6 py-3 text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-                  {filteredLicencas.map((lic) => {
-                    const vencimento = new Date(lic.data_vencimento).getTime();
-                    const isExpirada = vencimento < Date.now();
-                    const playlistCount = playlistCounts[lic.id] || 0;
-                    
-                    return (
-                      <tr key={lic.id} className="hover:bg-slate-50/50 transition">
-                        <td className="px-6 py-4 text-slate-700 font-mono">
+            <>
+              {/* LAYOUT DE TABELA PARA DESKTOP */}
+              <div className="hidden md:block overflow-x-auto w-full">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-150 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                      <th className="px-6 py-3">Usuário (E-mail)</th>
+                      <th className="px-6 py-3">Token (Código)</th>
+                      <th className="px-6 py-3">Status</th>
+                      <th className="px-6 py-3">Validade</th>
+                      <th className="px-6 py-3 text-center">Playlists (Qtd/Limite)</th>
+                      <th className="px-6 py-3 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                    {filteredLicencas.map((lic) => {
+                      const vencimento = new Date(lic.data_vencimento).getTime();
+                      const isExpirada = vencimento < Date.now();
+                      const playlistCount = playlistCounts[lic.id] || 0;
+                      
+                      return (
+                        <tr key={lic.id} className="hover:bg-slate-50/50 transition">
+                          <td className="px-6 py-4 text-slate-700 font-mono">
+                            {lic.username ? `${lic.username.toLowerCase()}@midia.indoor` : 'Sem e-mail'}
+                          </td>
+                          <td className="px-6 py-4 font-mono font-bold text-slate-800 text-sm select-all">
+                            {lic.codigo_ativacao ? (
+                              <span className="bg-slate-150 border border-slate-200 px-2 py-0.5 rounded text-xs select-all text-slate-750">
+                                {lic.codigo_ativacao}
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleGenerateToken(lic.id)}
+                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-1 rounded text-[10px] font-bold transition"
+                              >
+                                Gerar Token
+                              </button>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            {lic.status === 'ativa' && !isExpirada && (
+                              <span className="bg-emerald-100 border border-emerald-200 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                                Ativa
+                              </span>
+                            )}
+                            {lic.status === 'ativa' && isExpirada && (
+                              <span className="bg-amber-100 border border-amber-200 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                                Expirada
+                              </span>
+                            )}
+                            {lic.status !== 'ativa' && (
+                              <span className="bg-red-100 border border-red-200 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                                {lic.status}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 font-mono">
+                            {new Date(lic.data_vencimento).toLocaleDateString('pt-BR')}
+                          </td>
+                          <td className="px-6 py-4 text-center font-bold text-sm">
+                            {playlistCount} / {lic.limite_playlists}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleOpenEditModal(lic)}
+                                title="Editar Cliente"
+                                className="bg-white hover:bg-slate-50 border border-indigo-200 py-1.5 px-3 rounded-lg text-indigo-650 hover:bg-indigo-50/30 transition shadow-sm flex items-center gap-1 text-[10px] font-bold"
+                              >
+                                <Edit2 className="h-3.5 w-3.5" /> Editar
+                              </button>
+                              <button
+                                onClick={() => handleExcluirLicenca(lic.id, lic.codigo_ativacao)}
+                                title="Excluir Cliente"
+                                className="bg-white hover:bg-slate-50 border border-red-200 py-1.5 px-3 rounded-lg text-red-500 hover:bg-red-50/30 transition shadow-sm flex items-center gap-1 text-[10px] font-bold"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" /> Excluir
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* LAYOUT DE CARDS PARA MOBILE */}
+              <div className="block md:hidden divide-y divide-slate-100">
+                {filteredLicencas.map((lic) => {
+                  const vencimento = new Date(lic.data_vencimento).getTime();
+                  const isExpirada = vencimento < Date.now();
+                  const playlistCount = playlistCounts[lic.id] || 0;
+
+                  return (
+                    <div key={lic.id} className="p-4 space-y-3 bg-white hover:bg-slate-50/50 transition">
+                      {/* E-mail e Status */}
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-slate-700 font-bold break-all max-w-[70%] text-xs">
                           {lic.username ? `${lic.username.toLowerCase()}@midia.indoor` : 'Sem e-mail'}
-                        </td>
-                        <td className="px-6 py-4 font-mono font-bold text-slate-800 text-sm select-all">
+                        </span>
+                        <div>
+                          {lic.status === 'ativa' && !isExpirada && (
+                            <span className="bg-emerald-100 border border-emerald-200 text-emerald-700 px-2.5 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider">
+                              Ativa
+                            </span>
+                          )}
+                          {lic.status === 'ativa' && isExpirada && (
+                            <span className="bg-amber-100 border border-amber-200 text-amber-700 px-2.5 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider">
+                              Expirada
+                            </span>
+                          )}
+                          {lic.status !== 'ativa' && (
+                            <span className="bg-red-100 border border-red-200 text-red-700 px-2.5 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider">
+                              {lic.status}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Informações detalhadas */}
+                      <div className="grid grid-cols-2 gap-3 text-xs text-slate-650">
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Token / Código</span>
                           {lic.codigo_ativacao ? (
-                            <span className="bg-slate-150 border border-slate-200 px-2 py-0.5 rounded text-xs select-all text-slate-750">
+                            <span className="bg-slate-150 border border-slate-200 px-2 py-0.5 rounded font-mono font-bold text-slate-750 text-xs select-all inline-block">
                               {lic.codigo_ativacao}
                             </span>
                           ) : (
@@ -2984,54 +3307,43 @@ const AdminDashboard: React.FC = () => {
                               Gerar Token
                             </button>
                           )}
-                        </td>
-                        <td className="px-6 py-4">
-                          {lic.status === 'ativa' && !isExpirada && (
-                            <span className="bg-emerald-100 border border-emerald-200 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                              Ativa
-                            </span>
-                          )}
-                          {lic.status === 'ativa' && isExpirada && (
-                            <span className="bg-amber-100 border border-amber-200 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                              Expirada
-                            </span>
-                          )}
-                          {lic.status !== 'ativa' && (
-                            <span className="bg-red-100 border border-red-200 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                              {lic.status}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 font-mono">
-                          {new Date(lic.data_vencimento).toLocaleDateString('pt-BR')}
-                        </td>
-                        <td className="px-6 py-4 text-center font-bold text-sm">
-                          {playlistCount} / {lic.limite_playlists}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleOpenEditModal(lic)}
-                              title="Editar Cliente"
-                              className="bg-white hover:bg-slate-50 border border-indigo-200 py-1.5 px-3 rounded-lg text-indigo-650 hover:bg-indigo-50/30 transition shadow-sm flex items-center gap-1 text-[10px] font-bold"
-                            >
-                              <Edit2 className="h-3.5 w-3.5" /> Editar
-                            </button>
-                            <button
-                              onClick={() => handleExcluirLicenca(lic.id, lic.codigo_ativacao)}
-                              title="Excluir Cliente"
-                              className="bg-white hover:bg-slate-50 border border-red-200 py-1.5 px-3 rounded-lg text-red-500 hover:bg-red-50/30 transition shadow-sm flex items-center gap-1 text-[10px] font-bold"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" /> Excluir
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Playlists</span>
+                          <span className="font-bold text-slate-800 text-xs">
+                            {playlistCount} / {lic.limite_playlists}
+                          </span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Validade</span>
+                          <span className="font-mono font-semibold">
+                            {new Date(lic.data_vencimento).toLocaleDateString('pt-BR')}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Ações (Editar / Excluir) */}
+                      <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                        <button
+                          onClick={() => handleOpenEditModal(lic)}
+                          title="Editar Cliente"
+                          className="flex-1 bg-white hover:bg-slate-50 border border-indigo-200 py-1.5 rounded-lg text-indigo-650 transition flex items-center justify-center gap-1.5 text-[10px] font-bold shadow-sm"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" /> Editar
+                        </button>
+                        <button
+                          onClick={() => handleExcluirLicenca(lic.id, lic.codigo_ativacao)}
+                          title="Excluir Cliente"
+                          className="flex-1 bg-white hover:bg-slate-50 border border-red-200 py-1.5 rounded-lg text-red-500 transition flex items-center justify-center gap-1.5 text-[10px] font-bold shadow-sm"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Excluir
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </main>
@@ -3039,7 +3351,7 @@ const AdminDashboard: React.FC = () => {
       {/* MODAL PARA CRIAÇÃO DE LICENÇA */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
             <header className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <h3 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
                 <Plus className="h-4.5 w-4.5 text-indigo-500" />
@@ -3053,7 +3365,7 @@ const AdminDashboard: React.FC = () => {
               </button>
             </header>
 
-            <form onSubmit={handleCreateLicense} className="p-5 space-y-4">
+            <form onSubmit={handleCreateLicense} className="p-5 space-y-4 overflow-y-auto">
               <div>
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Código de Ativação (Licença)</label>
                 <div className="relative">
@@ -3124,7 +3436,7 @@ const AdminDashboard: React.FC = () => {
       {/* MODAL PARA EDIÇÃO DE LICENÇA */}
       {showEditModal && editingLicenca && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
             <header className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <h3 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
                 <Edit2 className="h-4.5 w-4.5 text-indigo-500" />
@@ -3138,7 +3450,7 @@ const AdminDashboard: React.FC = () => {
               </button>
             </header>
 
-            <form onSubmit={handleSaveEdit} className="p-5 space-y-4">
+            <form onSubmit={handleSaveEdit} className="p-5 space-y-4 overflow-y-auto">
               <div>
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Nome de Usuário</label>
                 <input

@@ -36,6 +36,13 @@ export function useMediaCache(urls: string[]) {
       // 2. Resolve e cria blobs apenas para novas mídias
       for (const url of urls) {
         if (!url) continue;
+        
+        // Ignora cache para links do YouTube
+        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+          newUrls[url] = url;
+          continue;
+        }
+
         try {
           // Se já temos um blob gerado para essa URL na rodada anterior, reutiliza
           if (currentBlobs[url] && currentBlobs[url].startsWith('blob:')) {
