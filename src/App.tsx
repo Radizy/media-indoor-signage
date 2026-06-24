@@ -89,10 +89,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = async (codigo: string) => {
-    const email = `${codigo.trim().toLowerCase()}@midia.indoor`;
+    const cleanCode = codigo.trim().toLowerCase();
+    const email = `${cleanCode}@midia.indoor`;
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password: codigo.trim(),
+      password: cleanCode,
     });
 
     if (error) {
