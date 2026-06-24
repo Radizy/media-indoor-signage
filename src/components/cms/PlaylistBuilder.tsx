@@ -22,6 +22,7 @@ interface PlaylistItem {
   midia_id: string;
   ordem: number;
   duracao_segundos: number;
+  dias_semana?: number[];
   midias: Midia;
 }
 
@@ -246,6 +247,33 @@ export const PlaylistBuilder: React.FC = () => {
     }
   };
 
+  const handleToggleDiaSemana = async (itemId: string, diasAtuais: number[], diaClicado: number) => {
+    let novosDias: number[];
+    if (diasAtuais.includes(diaClicado)) {
+      novosDias = diasAtuais.filter((d) => d !== diaClicado);
+    } else {
+      novosDias = [...diasAtuais, diaClicado].sort();
+    }
+
+    try {
+      const { error: updateError } = await supabase
+        .from('playlist_itens')
+        .update({ dias_semana: novosDias })
+        .eq('id', itemId);
+
+      if (updateError) throw updateError;
+
+      setPlaylistItens((prev) =>
+        prev.map((item) =>
+          item.id === itemId ? { ...item, dias_semana: novosDias } : item
+        )
+      );
+    } catch (err: any) {
+      console.error('Erro ao atualizar dias da semana:', err);
+      setError(err.message || 'Falha ao atualizar dias de exibição.');
+    }
+  };
+
   const moverItem = async (index: number, direcao: 'up' | 'down') => {
     if (!selectedPlaylist) return;
     const novoIndex = direcao === 'up' ? index - 1 : index + 1;
@@ -365,15 +393,36 @@ export const PlaylistBuilder: React.FC = () => {
                     key={item.id}
                     className="flex items-center justify-between p-2 rounded-lg bg-slate-900/90 border border-slate-850 hover:border-slate-800"
                   >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      {item.midias.tipo === 'video' ? (
-                        <Film className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
-                      ) : (
-                        <Image className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
-                      )}
-                      <span className="text-xs text-slate-300 truncate max-w-[120px]" title={item.midias.nome}>
-                        {item.midias.nome}
-                      </span>
+                    <div className="flex flex-col overflow-hidden max-w-[130px] sm:max-w-[180px]">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        {item.midias.tipo === 'video' ? (
+                          <Film className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                        ) : (
+                          <Image className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+                        )}
+                        <span className="text-xs text-slate-300 truncate font-semibold" title={item.midias.nome}>
+                          {item.midias.nome}
+                        </span>
+                      </div>
+                      <div className="flex gap-0.5 mt-1 pl-[22px]">
+                        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((diaLabel, diaIdx) => {
+                          const ativo = item.dias_semana ? item.dias_semana.includes(diaIdx) : true;
+                          return (
+                            <button
+                              key={diaIdx}
+                              onClick={() => handleToggleDiaSemana(item.id, item.dias_semana || [0,1,2,3,4,5,6], diaIdx)}
+                              className={`w-3.5 h-3.5 text-[8px] font-black rounded flex items-center justify-center transition-all ${
+                                ativo 
+                                  ? 'bg-indigo-600 text-white font-black hover:bg-indigo-700' 
+                                  : 'bg-slate-950 text-slate-600 hover:bg-slate-900 border border-slate-850'
+                              }`}
+                              title={`${diaLabel} (Clique para alternar)`}
+                            >
+                              {diaLabel}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">

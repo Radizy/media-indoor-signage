@@ -282,6 +282,7 @@ interface PlaylistItem {
   midia_id: string;
   ordem: number;
   duracao_segundos: number;
+  dias_semana?: number[];
   midias: {
     id: string;
     nome: string;
@@ -2045,6 +2046,17 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
   }, [playlist]);
   const { cachedUrls } = useMediaCache(mediaUrls);
 
+  // Filtra as mídias da playlist para o dia da semana atual (0 = Domingo, 1 = Segunda, etc.)
+  const diaSemanaAtual = localTime.getDay();
+  const playlistFiltrada = useMemo(() => {
+    return playlist.filter((item) => {
+      if (!item.dias_semana) return true;
+      return item.dias_semana.includes(diaSemanaAtual);
+    });
+  }, [playlist, diaSemanaAtual]);
+
+
+
   // Timer regressivo da tela de boot (10 segundos)
   useEffect(() => {
     if (!mostrarBoot) return;
@@ -2243,24 +2255,27 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
     };
   }, [licencaId]);
 
-  // Loop da playlist
-  useEffect(() => {
-    if (mostrarBoot || playlist.length === 0) return;
+  // Loop da playlist (exibindo apenas mídias agendadas para o dia atual)
+  const activeIndex = playlistFiltrada.length > 0 ? (indiceAtual % playlistFiltrada.length) : 0;
 
-    const item = playlist[indiceAtual];
+  useEffect(() => {
+    if (mostrarBoot || playlistFiltrada.length === 0) return;
+
+    const item = playlistFiltrada[activeIndex];
+    if (!item) return;
     const tipo = item.midias?.tipo || 'imagem';
     const duracao = tipo === 'imagem' ? (item.duracao_segundos || 10) * 1000 : 0;
 
     if (duracao > 0) {
       const timer = setTimeout(() => {
-        setIndiceAtual((prev) => (prev + 1) % playlist.length);
+        setIndiceAtual((prev) => (prev + 1) % playlistFiltrada.length);
       }, duracao);
       return () => clearTimeout(timer);
     }
-  }, [playlist, indiceAtual, mostrarBoot]);
+  }, [playlistFiltrada, activeIndex, mostrarBoot]);
 
   const handleVideoEnded = () => {
-    setIndiceAtual((prev) => (prev + 1) % playlist.length);
+    setIndiceAtual((prev) => (prev + 1) % playlistFiltrada.length);
   };
 
   // Altera a rotação da tela localmente e atualiza o Supabase + localStorage
@@ -2312,7 +2327,7 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
     }
   })();
 
-  const loop = playlist.length === 1;
+  const loop = playlistFiltrada.length === 1;
 
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-black overflow-hidden select-none relative">
@@ -2548,13 +2563,25 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
 
             </div>
           </div>
+        ) : playlistFiltrada.length === 0 ? (
+          // ==========================================
+          // TELA DE FALLBACK SEM PROGRAMAÇÃO ATIVA PARA O DIA
+          // ==========================================
+          <div className="flex h-full w-full flex-col items-center justify-center bg-[#030712] text-slate-400 p-6 text-center select-none font-sans">
+            <Monitor className="h-12 w-12 text-slate-700 mb-3 animate-pulse" />
+            <p className="text-sm font-bold text-slate-300">Sem Programação Ativa</p>
+            <p className="text-xs text-slate-500 mt-1 max-w-[280px]">Nenhuma mídia desta playlist está programada para ser exibida hoje.</p>
+            <p className="text-[10px] font-mono text-indigo-400 mt-4 bg-indigo-950/30 border border-indigo-900/20 px-2.5 py-1 rounded-lg">
+              Hoje é {localTime.toLocaleDateString('pt-BR', { weekday: 'long' })}
+            </p>
+          </div>
         ) : (
           // ==========================================
-          // REPRODUTOR DE PLAYLIST (MÍDIA EM LOOP)
+          // REPRODUTOR DE PLAYLIST (MÍDIA EM LOOP FILTRADA)
           // ==========================================
-          playlist.map((item, index) => {
-            const isActive = index === indiceAtual;
-            const isNext = index === (indiceAtual + 1) % playlist.length;
+          playlistFiltrada.map((item, index) => {
+            const isActive = index === activeIndex;
+            const isNext = index === (activeIndex + 1) % playlistFiltrada.length;
             const urlOriginal = item.midias?.url_arquivo;
             const urlMidia = cachedUrls[urlOriginal] || urlOriginal;
 
