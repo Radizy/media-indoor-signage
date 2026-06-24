@@ -185,40 +185,74 @@ const CMSLogin: React.FC = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
+    <div className="relative flex min-h-screen items-center justify-center px-4 overflow-hidden text-white">
+      {/* Background Blobs Animados */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 bg-[#030712]">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/10 rounded-full blur-[100px] animate-blob-1" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-cyan-600/10 rounded-full blur-[100px] animate-blob-2" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-600/5 rounded-full blur-[120px] animate-blob-3" />
+      </div>
+
       {/* Botão invisível no canto superior direito para ir ao admin */}
       <button
         onClick={() => navigate('/admin')}
-        className="absolute top-4 right-4 w-24 h-16 opacity-0 cursor-default"
+        className="absolute top-4 right-4 w-24 h-16 opacity-0 cursor-default z-50"
         title="Área Administrativa"
       />
-      <div className="w-full max-w-md rounded-2xl bg-slate-900/80 p-8 shadow-2xl border border-slate-800 backdrop-blur-md">
-        <h2 className="text-center text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-          Mídia Indoor CMS
-        </h2>
-        <p className="mt-2 text-center text-sm text-slate-400">
-          Insira seu código de licença para gerenciar sua tela.
-        </p>
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          <div>
-            <label htmlFor="license-code" className="sr-only">Código de Licença</label>
+
+      <div className="w-full max-w-md rounded-2xl glass-panel p-8 shadow-2xl relative border border-slate-800/80 hover:border-indigo-500/20 transition-all duration-500">
+        {/* Glow no topo do card */}
+        <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-600/10 border border-indigo-500/25 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(99,102,241,0.15)]">
+            <Monitor className="h-7 w-7 text-indigo-400" />
+          </div>
+          <h2 className="text-center text-3xl font-black tracking-tight bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
+            MÍDIA INDOOR
+          </h2>
+          <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-500/80 mt-1">
+            Painel de Controle CMS
+          </span>
+          <p className="mt-3 text-center text-xs text-slate-400 max-w-[280px]">
+            Insira o código de licença da sua conta para gerenciar playlists e telas.
+          </p>
+        </div>
+
+        <form className="mt-6 space-y-5" onSubmit={handleLogin}>
+          <div className="space-y-1">
+            <label htmlFor="license-code" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block ml-1">
+              Código de Ativação / Licença
+            </label>
             <input
               id="license-code"
               type="text"
               required
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-center uppercase tracking-widest font-mono"
-              placeholder="CÓDIGO DE ATIVAÇÃO"
+              className="w-full rounded-xl border border-slate-800 bg-slate-950/70 px-4 py-3.5 text-white placeholder-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 text-center uppercase tracking-widest font-mono text-lg font-black transition-all duration-200 shadow-inner"
+              placeholder="DIGITE SEU CÓDIGO"
             />
           </div>
-          {error && <p className="text-sm text-red-400 text-center">{error}</p>}
+
+          {error && (
+            <p className="text-xs text-red-400 text-center font-medium bg-red-950/20 border border-red-900/30 py-2 px-3 rounded-lg animate-pulse">
+              ⚠️ {error}
+            </p>
+          )}
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 py-3 font-semibold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition flex items-center justify-center gap-2"
+            className="w-full rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 py-3.5 font-bold text-sm text-white hover:opacity-95 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-indigo-950/30"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Acessar Painel'}
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Verificando...
+              </>
+            ) : (
+              'Acessar Painel'
+            )}
           </button>
         </form>
       </div>
@@ -664,30 +698,35 @@ const CMSDashboard: React.FC = () => {
     return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
   };
 
-  const activePlaylistCount = playlists.length;
-
   return (
-    <div className="min-h-screen bg-[#f5f8fa] text-slate-800 font-sans select-none flex flex-col">
+    <div className="min-h-screen relative text-slate-100 select-none flex flex-col overflow-x-hidden bg-[#030712]">
+      {/* Background Blobs Animados */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-600/5 rounded-full blur-[120px] animate-blob-1" />
+        <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-cyan-600/5 rounded-full blur-[140px] animate-blob-2" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-600/3 rounded-full blur-[160px] animate-blob-3" />
+      </div>
+
       {/* HEADER DE NAVEGAÇÃO SUPERIOR */}
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+      <header className="glass-panel border-b border-slate-800/60 px-6 py-4 flex items-center justify-between sticky top-0 z-40 shadow-lg">
         <div className="flex items-center gap-3">
           <Folder className="h-5 w-5 text-amber-500" />
           <div className="flex items-center gap-2 text-sm font-semibold">
             {view === 'list' ? (
               <>
-                <span className="text-slate-400">/</span>
-                <span className="text-slate-800"> (Playlists: {activePlaylistCount} / {licenca?.limite_playlists || 10})</span>
+                <span className="text-slate-500">/</span>
+                <span className="text-slate-200"> (Playlists: {playlists.length} / {licenca?.limite_playlists || 10})</span>
               </>
             ) : (
               <>
                 <span 
                   onClick={() => setView('list')} 
-                  className="text-indigo-600 hover:underline cursor-pointer"
+                  className="text-indigo-400 hover:text-indigo-300 hover:underline cursor-pointer"
                 >
                   /
                 </span>
-                <span className="text-slate-400">/</span>
-                <span className="text-slate-800 truncate max-w-[200px]" title={currentPlaylist?.nome}>
+                <span className="text-slate-500">/</span>
+                <span className="text-slate-200 truncate max-w-[200px]" title={currentPlaylist?.nome}>
                   {currentPlaylist?.nome.toLowerCase().replace(/\s+/g, '-')}
                 </span>
               </>
@@ -699,20 +738,20 @@ const CMSDashboard: React.FC = () => {
           <button
             onClick={() => setView('list')}
             disabled={view === 'list'}
-            className="flex items-center gap-1 bg-white hover:bg-slate-50 border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 transition"
+            className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 border border-slate-800/80 disabled:opacity-40 disabled:cursor-not-allowed px-3.5 py-2 rounded-xl text-xs font-bold text-slate-200 shadow-sm transition active:scale-95"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Voltar
           </button>
           
           <button
             onClick={handleCriarPlaylist}
-            className="flex items-center gap-1 bg-[#4f46e5] hover:bg-indigo-700 border border-transparent px-3 py-1.5 rounded-lg text-xs font-semibold text-white shadow-sm transition"
+            className="flex items-center gap-1 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400 hover:from-indigo-500 hover:to-indigo-300 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-indigo-950/20 transition hover:-translate-y-0.5 active:scale-95"
           >
             <Plus className="h-3.5 w-3.5" /> Criar Playlist
           </button>
 
           {view === 'detail' && (
-            <label className="flex items-center gap-1 bg-[#10b981] hover:bg-emerald-700 border border-transparent px-3 py-1.5 rounded-lg text-xs font-semibold text-white shadow-sm transition cursor-pointer">
+            <label className="flex items-center gap-1 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 hover:from-emerald-500 hover:to-emerald-300 border border-emerald-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-emerald-950/20 transition hover:-translate-y-0.5 active:scale-95 cursor-pointer">
               <input
                 type="file"
                 accept="image/png, image/jpeg, image/webp, video/mp4"
@@ -726,7 +765,7 @@ const CMSDashboard: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <Upload className="h-3.5 w-3.5" /> Subir Arquivo
+                  <Upload className="h-3.5 w-3.5" /> Subir Mídia
                 </>
               )}
             </label>
@@ -734,14 +773,14 @@ const CMSDashboard: React.FC = () => {
 
           <button
             onClick={() => setShowProfileModal(true)}
-            className="flex items-center gap-1 bg-[#6366f1] hover:bg-indigo-750 border border-transparent px-3 py-1.5 rounded-lg text-xs font-semibold text-white shadow-sm transition"
+            className="flex items-center gap-1 bg-gradient-to-r from-violet-600 via-violet-500 to-violet-400 hover:from-violet-500 hover:to-violet-300 border border-violet-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-violet-950/20 transition hover:-translate-y-0.5 active:scale-95"
           >
             <User className="h-3.5 w-3.5" /> Minha Conta
           </button>
 
           <button
             onClick={logout}
-            className="flex items-center gap-1 bg-[#ef4444] hover:bg-red-700 border border-transparent px-3 py-1.5 rounded-lg text-xs font-semibold text-white shadow-sm transition"
+            className="flex items-center gap-1 bg-slate-905 hover:bg-red-950/30 border border-red-900/30 px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 transition-all"
           >
             <LogOut className="h-3.5 w-3.5" /> Sair
           </button>
@@ -752,24 +791,26 @@ const CMSDashboard: React.FC = () => {
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         
         {/* BANNER DE BOAS-VINDAS E ORIENTAÇÕES */}
-        <div className="bg-white border border-slate-250/80 rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+        <div className="glass-panel border border-slate-800/80 rounded-2xl p-6 shadow-xl space-y-4 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-44 h-44 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none -z-10 group-hover:bg-indigo-500/10 transition-all duration-500" />
+          
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-850">
             <div>
-              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                Olá, <span className="text-indigo-650 capitalize">{licenca?.username}</span>! 👋
+              <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+                Olá, <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent capitalize font-black">{licenca?.username || 'Cliente'}</span>! 👋
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5">
                 Gerencie suas mídias e monitore o status de suas telas de forma simples.
               </p>
             </div>
-            <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-150 px-3 py-2 rounded-xl shrink-0">
+            <div className="flex items-center gap-2 bg-slate-950/80 border border-slate-800/80 px-3.5 py-2.5 rounded-xl shrink-0 hover:border-indigo-500/20 transition-all duration-300">
               <div className="text-left">
-                <p className="text-[10px] uppercase font-bold text-indigo-500 tracking-wider">Token de Ativação TV</p>
-                <p className="text-sm font-mono font-black text-indigo-700 tracking-widest uppercase select-all">{licenca?.codigo_ativacao}</p>
+                <p className="text-[10px] uppercase font-black text-indigo-400 tracking-wider">Token de Ativação TV</p>
+                <p className="text-sm font-mono font-black text-indigo-300 tracking-widest uppercase select-all">{licenca?.codigo_ativacao}</p>
               </div>
               <button
                 onClick={() => handleCopyCode(licenca?.codigo_ativacao)}
-                className="bg-white hover:bg-slate-50 border border-indigo-200 p-1.5 rounded-lg text-indigo-600 transition shadow-sm ml-1"
+                className="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-1.5 rounded-lg text-indigo-400 hover:text-indigo-300 transition shadow-sm ml-1"
                 title="Copiar Token"
               >
                 {copiedId === licenca?.codigo_ativacao ? (
@@ -782,91 +823,91 @@ const CMSDashboard: React.FC = () => {
           </div>
 
           <div className="space-y-3.5">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50 border border-slate-150 rounded-xl p-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-950/40 border border-slate-800/60 rounded-xl p-4">
               <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
+                <Info className="h-5 w-5 text-indigo-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-slate-800">
+                  <h3 className="text-sm font-bold text-slate-200">
                     Requisitos e Limites de Mídia
                   </h3>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-650 font-medium">
-                    <span>• Arquivos até <strong className="text-slate-800">99MB</strong></span>
-                    <span>• Vídeos em <strong className="text-slate-800">MP4</strong></span>
-                    <span>• Imagens em <strong className="text-slate-800">JPG ou PNG</strong></span>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-400 font-medium">
+                    <span>• Arquivos até <strong className="text-slate-100">99MB</strong></span>
+                    <span>• Vídeos em <strong className="text-slate-100">MP4</strong></span>
+                    <span>• Imagens em <strong className="text-slate-100">JPG ou PNG</strong></span>
                   </div>
                 </div>
               </div>
               
               <button
                 onClick={() => setShowSpecs(!showSpecs)}
-                className="flex items-center gap-1 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-sm transition"
+                className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition"
               >
                 {showSpecs ? (
                   <>
-                    Ocultar Resoluções Ideais <ChevronUp className="h-3.5 w-3.5 text-slate-500" />
+                    Ocultar Resoluções Ideais <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
                   </>
                 ) : (
                   <>
-                    Ver Resoluções Ideais <ChevronDown className="h-3.5 w-3.5 text-slate-500" />
+                    Ver Resoluções Ideais <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                   </>
                 )}
               </button>
             </div>
 
             {showSpecs && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-slate-150 rounded-xl p-4 bg-slate-50/50 animate-fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border border-slate-800/80 rounded-2xl p-5 bg-slate-950/40 animate-fade-in">
                 {/* Horizontal */}
-                <div className="bg-white border border-slate-150 rounded-xl p-4 space-y-3 shadow-sm">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <div className="bg-slate-900/40 border border-slate-850 p-5 rounded-2xl space-y-4 hover:border-indigo-500/20 transition-all duration-300 shadow-inner">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-850 pb-2">
                     📺 Horizontal (Modo Paisagem)
                   </h4>
-                  <div className="divide-y divide-slate-100 text-xs">
-                    <div className="py-2 flex justify-between">
-                      <span className="font-semibold text-slate-750">1080p (Full HD - Recomendado)</span>
-                      <span className="font-mono font-bold text-slate-900">1920px x 1080px</span>
+                  <div className="divide-y divide-slate-850/60 text-xs">
+                    <div className="py-2.5 flex justify-between items-center">
+                      <span className="font-semibold text-slate-300">1080p (Full HD - Recomendado)</span>
+                      <span className="bg-indigo-950/60 border border-indigo-900/50 text-indigo-300 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg">1920px x 1080px</span>
                     </div>
-                    <div className="py-2 flex justify-between">
-                      <span className="font-semibold text-slate-750">2K (Quad HD)</span>
-                      <span className="font-mono font-bold text-slate-900">2560px x 1440px</span>
+                    <div className="py-2.5 flex justify-between items-center">
+                      <span className="font-semibold text-slate-350">2K (Quad HD)</span>
+                      <span className="bg-slate-900 border border-slate-800 text-slate-400 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg">2560px x 1440px</span>
                     </div>
-                    <div className="py-2 flex justify-between">
-                      <span className="font-semibold text-slate-750">4K (Ultra HD)</span>
-                      <span className="font-mono font-bold text-slate-900">3840px x 2160px</span>
+                    <div className="py-2.5 flex justify-between items-center">
+                      <span className="font-semibold text-slate-350">4K (Ultra HD)</span>
+                      <span className="bg-slate-900 border border-slate-800 text-slate-400 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg">3840px x 2160px</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Vertical */}
-                <div className="bg-white border border-slate-150 rounded-xl p-4 space-y-3 shadow-sm">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <div className="bg-slate-900/40 border border-slate-850 p-5 rounded-2xl space-y-4 hover:border-indigo-500/20 transition-all duration-300 shadow-inner">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-850 pb-2">
                     📱 Vertical (Modo Retrato)
                   </h4>
-                  <div className="divide-y divide-slate-100 text-xs">
-                    <div className="py-2 flex justify-between">
-                      <span className="font-semibold text-slate-755">1080p (Full HD - Recomendado)</span>
-                      <span className="font-mono font-bold text-slate-900">1080px x 1920px</span>
+                  <div className="divide-y divide-slate-850/60 text-xs">
+                    <div className="py-2.5 flex justify-between items-center">
+                      <span className="font-semibold text-slate-300">1080p (Full HD - Recomendado)</span>
+                      <span className="bg-indigo-950/60 border border-indigo-900/50 text-indigo-300 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg">1080px x 1920px</span>
                     </div>
-                    <div className="py-2 flex justify-between">
-                      <span className="font-semibold text-slate-755">2K (Quad HD)</span>
-                      <span className="font-mono font-bold text-slate-900">1440px x 2560px</span>
+                    <div className="py-2.5 flex justify-between items-center">
+                      <span className="font-semibold text-slate-350">2K (Quad HD)</span>
+                      <span className="bg-slate-900 border border-slate-800 text-slate-400 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg">1440px x 2560px</span>
                     </div>
-                    <div className="py-2 flex justify-between">
-                      <span className="font-semibold text-slate-755">4K (Ultra HD)</span>
-                      <span className="font-mono font-bold text-slate-900">2160px x 3840px</span>
+                    <div className="py-2.5 flex justify-between items-center">
+                      <span className="font-semibold text-slate-350">4K (Ultra HD)</span>
+                      <span className="bg-slate-900 border border-slate-800 text-slate-400 font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg">2160px x 3840px</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Informação Técnica e Alerta */}
-                <div className="col-span-1 md:col-span-2 bg-[#fef2f2] border border-[#fecaca] rounded-xl p-4 flex items-start gap-3 text-red-900">
-                  <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-                  <div className="space-y-1.5 text-xs text-red-850">
-                    <h5 className="font-bold text-red-800">Diretrizes de Desempenho e Compatibilidade (TV Box)</h5>
+                <div className="col-span-1 md:col-span-2 bg-rose-950/15 border border-rose-900/30 rounded-2xl p-5 flex items-start gap-3.5 text-rose-200 shadow-sm animate-pulse-glow">
+                  <AlertTriangle className="h-5 w-5 text-rose-450 shrink-0 mt-0.5" />
+                  <div className="space-y-2 text-xs text-rose-350">
+                    <h5 className="font-bold text-rose-450 uppercase tracking-wider text-[10px]">Diretrizes de Desempenho e Compatibilidade (TV Box)</h5>
                     <p className="leading-relaxed">
-                      • <strong className="text-red-950">Evite usar qualidades 2K ou 4K e vídeos de 60fps</strong>. A grande maioria das TV Boxes comerciais do mercado (MX9, Aquário, etc.) possuem processadores modestos que travam ou engasgam ao renderizar essas resoluções.
+                      • <strong className="text-rose-200">Evite usar qualidades 2K ou 4K e vídeos de 60fps</strong>. A grande maioria das TV Boxes comerciais do mercado (MX9, Aquário, etc.) possuem processadores modestos que travam ou engasgam ao renderizar essas resoluções.
                     </p>
                     <p className="leading-relaxed">
-                      • <strong className="text-red-950">Ajuste de FPS & Bitrate recomendado:</strong> Para 1080p, configure seus vídeos para <strong className="text-red-950">30fps</strong> com bitrate máximo de <strong className="text-red-950">6 Mbps (Codec H.264)</strong>. Isso garante reprodução fluida e sem travamentos por superaquecimento.
+                      • <strong className="text-rose-200">Ajuste de FPS & Bitrate recomendado:</strong> Para 1080p, configure seus vídeos para <strong className="text-rose-200">30fps</strong> com bitrate máximo de <strong className="text-rose-200">6 Mbps (Codec H.264)</strong>. Isso garante reprodução fluida e sem travamentos por superaquecimento.
                     </p>
                   </div>
                 </div>
@@ -875,42 +916,43 @@ const CMSDashboard: React.FC = () => {
           </div>
 
           <div className="flex gap-2 pt-1">
-            <a href="https://microcosmo.io" target="_blank" rel="noreferrer" className="flex items-center gap-1 bg-[#64748b] hover:bg-slate-600 px-3.5 py-2 rounded-xl text-xs font-semibold text-white shadow-sm transition">
-              <HelpCircle className="h-3.5 w-3.5" /> Como otimizar mídias
+            <a href="https://microcosmo.io" target="_blank" rel="noreferrer" className="flex items-center gap-1 bg-slate-900/60 hover:bg-slate-855 border border-slate-800 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-200 transition shadow-sm">
+              <HelpCircle className="h-3.5 w-3.5 text-indigo-400" /> Como otimizar mídias
             </a>
-            <button className="flex items-center gap-1 bg-slate-300 text-slate-500 opacity-60 cursor-not-allowed px-3.5 py-2 rounded-xl text-xs font-semibold transition">
+            <button className="flex items-center gap-1 bg-slate-950/40 border border-slate-900/40 text-slate-500 opacity-40 px-3.5 py-2.5 rounded-xl text-xs font-bold transition cursor-not-allowed">
               Ajuda (em breve)
             </button>
           </div>
         </div>
-
         {/* LISTAGEM DE PLAYLISTS (PASTA PRINCIPAL) */}
         {view === 'list' && (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="glass-panel border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl animate-fade-in">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
-                <span className="text-slate-400 text-xs font-semibold">Carregando playlists...</span>
+              <div className="flex flex-col items-center justify-center py-24 gap-4">
+                <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
+                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Carregando playlists...</span>
               </div>
             ) : playlists.length === 0 ? (
-              <div className="text-center py-20 text-slate-400 flex flex-col items-center gap-2">
-                <Folder className="h-12 w-12 text-slate-300" />
-                <p className="text-sm font-semibold">Nenhuma playlist encontrada.</p>
-                <p className="text-xs">Clique em "Criar Playlist" acima para começar.</p>
+              <div className="text-center py-20 text-slate-500 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-2xl bg-slate-950/60 border border-slate-850 flex items-center justify-center text-slate-600 mb-2">
+                  <Folder className="h-6 w-6" />
+                </div>
+                <p className="text-sm font-bold text-slate-350">Nenhuma playlist encontrada</p>
+                <p className="text-xs text-slate-550 max-w-[280px]">Clique em "Criar Playlist" no canto superior direito para iniciar seu canal de mídia.</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-150">
+              <div className="divide-y divide-slate-850/60">
                 {playlists.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between p-4 hover:bg-slate-50 transition"
+                    className="flex items-center justify-between p-5 hover:bg-indigo-500/[0.02] transition-all duration-300 border-b border-slate-850 last:border-0 hover:-translate-y-0.5 shadow-sm hover:shadow-indigo-950/5 group"
                   >
                     <div 
                       onClick={() => openPlaylist(p)}
                       className="flex items-center gap-3 cursor-pointer overflow-hidden flex-1"
                     >
-                      <div className="flex items-center gap-2.5 overflow-hidden flex-wrap">
-                        <span className="text-xs font-bold text-slate-700 truncate hover:text-indigo-600 transition" title={p.nome}>
+                      <div className="flex items-center gap-3 overflow-hidden flex-wrap">
+                        <span className="text-sm font-bold text-slate-200 truncate group-hover:text-indigo-400 transition-colors duration-200" title={p.nome}>
                           Playlist: {p.nome}
                         </span>
 
@@ -921,9 +963,9 @@ const CMSDashboard: React.FC = () => {
                             handleRenamePlaylist(p);
                           }}
                           title="Renomear Playlist"
-                          className="text-slate-400 hover:text-indigo-650 p-0.5 hover:bg-slate-100 rounded transition shrink-0"
+                          className="text-slate-550 hover:text-indigo-450 p-1 hover:bg-slate-900 rounded-lg transition shrink-0"
                         >
-                          <Edit2 className="h-3 w-3" />
+                          <Edit2 className="h-3.5 w-3.5" />
                         </button>
 
                         {/* Botão de TV com contagem de dispositivos */}
@@ -933,40 +975,46 @@ const CMSDashboard: React.FC = () => {
                             openTvManager(p.id);
                           }}
                           title="Dispositivos vinculados a esta playlist (Ver/Desconectar)"
-                          className="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-[10px] px-2 py-0.5 rounded font-mono font-bold shrink-0 flex items-center gap-1 transition shadow-sm"
+                          className="bg-indigo-950/40 hover:bg-indigo-900/30 border border-indigo-900/50 text-indigo-300 text-[10px] px-2.5 py-0.5 rounded-lg font-mono font-bold shrink-0 flex items-center gap-1 transition shadow-sm"
                         >
-                          <Monitor className="h-3 w-3" />
+                          <Monitor className="h-3.5 w-3.5" />
                           <span>{tvs.filter(t => t.playlist_id === p.id).length} TVs</span>
                         </button>
 
-                        <span className="bg-slate-100 border border-slate-200 text-slate-600 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold shrink-0">
+                        <span className="bg-slate-950 border border-slate-850 text-slate-400 text-[10px] px-2 py-0.5 rounded-lg font-mono font-bold shrink-0">
                           Tamanho: {formatBytes(getPlaylistSize(p))}
                         </span>
 
-                        <span className="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold shrink-0 tracking-wider">
+                        <span className="bg-indigo-950/40 border border-indigo-900/40 text-indigo-300 text-[10px] px-2 py-0.5 rounded-lg font-mono font-bold shrink-0 tracking-wider">
                           Código TV: {p.codigo}
                         </span>
-                        <span className="text-[10px] text-slate-400 shrink-0 font-medium">
-                          ({formatDate(p.created_at)})
+                        
+                        <span className="text-[10px] text-slate-500 shrink-0 font-semibold uppercase tracking-wider font-mono">
+                          {formatDate(p.created_at)}
                         </span>
+                        
                         {p.ativa && (
-                          <span className="bg-emerald-100 border border-emerald-300 text-emerald-700 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase shrink-0">
+                          <span className="relative flex h-2 w-2 ml-1 shrink-0">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                        )}
+                        {p.ativa && (
+                          <span className="bg-emerald-950/50 border border-emerald-900/30 text-emerald-400 px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider shrink-0">
                             Ativa
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 ml-4 shrink-0">
-
-
+                    <div className="flex items-center gap-2 ml-4 shrink-0">
                       {/* Botão de Copiar Código da Playlist */}
                       <button
                         onClick={() => handleCopyCode(p.codigo)}
                         title="Copiar Código da Playlist"
-                        className="bg-white hover:bg-slate-50 border border-slate-350 hover:border-slate-450 p-2 rounded-lg text-slate-600 hover:text-slate-800 transition flex items-center justify-center gap-1.5 shadow-sm"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-slate-850 p-2.5 rounded-xl text-slate-400 hover:text-slate-100 transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
                       >
-                        <span className="text-[10px] font-bold text-slate-600 font-mono hidden md:inline tracking-wider">
+                        <span className="text-[10px] font-bold text-slate-400 font-mono hidden md:inline tracking-wider">
                           CÓDIGO: {p.codigo}
                         </span>
                         {copiedId === p.codigo ? (
@@ -980,7 +1028,7 @@ const CMSDashboard: React.FC = () => {
                       <button
                         onClick={() => openPlaylist(p)}
                         title="Editar Itens"
-                        className="bg-white hover:bg-slate-50 border border-[#22d3ee] p-2 rounded-lg text-cyan-600 hover:bg-cyan-50/30 transition shadow-sm"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-cyan-900/40 hover:border-cyan-800 p-2.5 rounded-xl text-cyan-400 hover:bg-cyan-950/20 transition-all duration-200 shadow-sm active:scale-95"
                       >
                         <Edit2 className="h-4 w-4" />
                       </button>
@@ -989,7 +1037,7 @@ const CMSDashboard: React.FC = () => {
                       <button
                         onClick={() => handleDeletarPlaylist(p.id)}
                         title="Deletar Playlist"
-                        className="bg-white hover:bg-slate-50 border border-[#f87171] p-2 rounded-lg text-red-500 hover:bg-red-50/30 transition shadow-sm"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-red-900/40 hover:border-red-800 p-2.5 rounded-xl text-red-400 hover:bg-red-950/20 transition-all duration-200 shadow-sm active:scale-95"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -1003,58 +1051,62 @@ const CMSDashboard: React.FC = () => {
 
         {/* LISTAGEM DE ARQUIVOS (DENTRO DE UMA PLAYLIST) */}
         {view === 'detail' && currentPlaylist && (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="glass-panel border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl animate-fade-in">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
-                <span className="text-slate-400 text-xs font-semibold">Carregando itens da playlist...</span>
+              <div className="flex flex-col items-center justify-center py-24 gap-4">
+                <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
+                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Carregando itens da playlist...</span>
               </div>
             ) : playlistItens.length === 0 ? (
-              <div className="text-center py-20 text-slate-400 flex flex-col items-center gap-2">
-                <Upload className="h-12 w-12 text-slate-300 animate-bounce" />
-                <p className="text-sm font-semibold">Esta playlist está vazia.</p>
-                <p className="text-xs">Selecione "Subir Arquivo" acima para adicionar imagens ou vídeos.</p>
+              <div className="text-center py-20 text-slate-500 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-2xl bg-slate-950/60 border border-slate-850 flex items-center justify-center text-slate-600 mb-2">
+                  <Upload className="h-6 w-6 animate-bounce text-slate-400" />
+                </div>
+                <p className="text-sm font-bold text-slate-350">Esta playlist está vazia</p>
+                <p className="text-xs text-slate-550 max-w-[280px]">Selecione "Subir Mídia" no menu superior para adicionar suas imagens ou vídeos.</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-150">
+              <div className="divide-y divide-slate-850/60">
                 {playlistItens.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-4 hover:bg-slate-50 transition"
+                    className="flex items-center justify-between p-5 hover:bg-indigo-500/[0.02] transition-all duration-300 border-b border-slate-850 last:border-0 hover:-translate-y-0.5 shadow-sm hover:shadow-indigo-950/5 group"
                   >
                     <div className="flex items-center gap-3 overflow-hidden flex-1">
-                      {item.midias.tipo === 'video' ? (
-                        <FileVideo className="h-5 w-5 text-red-500 shrink-0" />
-                      ) : (
-                        <FileImage className="h-5 w-5 text-emerald-500 shrink-0" />
-                      )}
-                      <div className="flex items-center gap-2.5 overflow-hidden">
-                        <span className="text-xs font-bold text-slate-700 truncate" title={item.midias.nome}>
+                      <div className="w-10 h-10 rounded-xl bg-slate-950/80 border border-slate-850 flex items-center justify-center shrink-0 shadow-inner group-hover:border-indigo-500/20 transition-all duration-300">
+                        {item.midias.tipo === 'video' ? (
+                          <FileVideo className="h-5 w-5 text-red-400" />
+                        ) : (
+                          <FileImage className="h-5 w-5 text-emerald-400" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 overflow-hidden flex-wrap">
+                        <span className="text-xs font-bold text-slate-200 truncate group-hover:text-indigo-400 transition-colors duration-200" title={item.midias.nome}>
                           {item.midias.nome}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-medium shrink-0">
+                        <span className="text-[10px] text-slate-500 font-semibold font-mono shrink-0">
                           ({formatBytes(item.midias.tamanho_bytes)})
                         </span>
                         {item.midias.tipo === 'imagem' ? (
-                          <span className="bg-indigo-50 border border-indigo-200 text-indigo-600 text-[10px] px-1.5 py-0.2 rounded font-semibold font-mono shrink-0">
+                          <span className="bg-indigo-950/40 border border-indigo-900/40 text-indigo-300 text-[10px] px-2 py-0.5 rounded-lg font-bold font-mono shrink-0">
                             Exibição: {item.duracao_segundos}s
                           </span>
                         ) : (
-                          <span className="bg-slate-100 border border-slate-200 text-slate-500 text-[10px] px-1.5 py-0.2 rounded font-semibold shrink-0">
-                            Vídeo
+                          <span className="bg-slate-950 border border-slate-850 text-slate-400 text-[10px] px-2 py-0.5 rounded-lg font-bold font-mono shrink-0">
+                            Vídeo (MP4)
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 ml-4 shrink-0">
+                    <div className="flex items-center gap-2 ml-4 shrink-0">
                       {/* Botão de Download */}
                       <a
                         href={item.midias.url_arquivo}
                         target="_blank"
                         rel="noreferrer"
                         title="Visualizar / Download"
-                        className="bg-white hover:bg-slate-50 border border-slate-350 p-2 rounded-lg text-slate-600 hover:text-slate-800 transition flex items-center justify-center shadow-sm"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-slate-850 p-2.5 rounded-xl text-slate-400 hover:text-slate-100 transition-all duration-200 flex items-center justify-center shadow-sm active:scale-95"
                       >
                         <Download className="h-4 w-4" />
                       </a>
@@ -1063,15 +1115,16 @@ const CMSDashboard: React.FC = () => {
                       <button
                         onClick={() => handleEditItem(item)}
                         title={item.midias.tipo === 'imagem' ? 'Editar Tempo' : 'Editar Nome'}
-                        className="bg-white hover:bg-slate-50 border border-[#22d3ee] p-2 rounded-lg text-cyan-600 hover:bg-cyan-50/30 transition shadow-sm"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-cyan-900/40 hover:border-cyan-800 p-2.5 rounded-xl text-cyan-400 hover:bg-cyan-950/20 transition-all duration-200 shadow-sm active:scale-95"
                       >
                         <Edit2 className="h-4 w-4" />
                       </button>
+                      
                       {/* Botão de Deletar item */}
                       <button
                         onClick={() => handleDeletarItem(item.id, item.midias.url_arquivo, item.midias.id)}
                         title="Remover da Playlist"
-                        className="bg-white hover:bg-slate-50 border border-[#f87171] p-2 rounded-lg text-red-500 hover:bg-red-50/30 transition shadow-sm"
+                        className="bg-slate-950/80 hover:bg-slate-900 border border-red-900/40 hover:border-red-800 p-2.5 rounded-xl text-red-400 hover:bg-red-950/20 transition-all duration-200 shadow-sm active:scale-95"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -1086,11 +1139,11 @@ const CMSDashboard: React.FC = () => {
 
       {/* MODAL DE CONTROLE E PAREAMENTO DA TV */}
       {showTvModal && activeTvPlaylistId && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
-            <header className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <h3 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
-                <Monitor className="h-4.5 w-4.5 text-indigo-500" />
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="glass-panel rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100 border border-slate-800/80">
+            <header className="px-5 py-4 border-b border-slate-850 flex items-center justify-between bg-slate-950/40 backdrop-blur-sm">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+                <Monitor className="h-4.5 w-4.5 text-indigo-400" />
                 Painel de Controle da TV
               </h3>
               <button
@@ -1098,15 +1151,15 @@ const CMSDashboard: React.FC = () => {
                   setShowTvModal(false);
                   setActiveTvPlaylistId(null);
                 }}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition"
+                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-900 transition active:scale-95"
               >
                 <X className="h-4 w-4" />
               </button>
             </header>
 
             <div className="p-5 space-y-4">
-              <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
-                Playlist: <span className="text-slate-800 font-bold">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Playlist: <span className="bg-indigo-950/50 border border-indigo-900/30 text-indigo-300 text-[10px] px-2 py-0.5 rounded-lg font-bold ml-1 font-mono">
                   {playlists.find(p => p.id === activeTvPlaylistId)?.nome}
                 </span>
               </div>
@@ -1114,36 +1167,37 @@ const CMSDashboard: React.FC = () => {
               {tvs.filter(t => t.playlist_id === activeTvPlaylistId).length === 0 ? (
                 // TV pendente de pareamento
                 <div className="space-y-4">
-                  <div className="p-3.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg font-medium leading-relaxed">
+                  <div className="p-3.5 bg-amber-950/20 border border-amber-900/30 text-amber-300 text-xs rounded-xl font-medium leading-relaxed">
                     Nenhuma TV vinculada a esta playlist ainda. Para parear, acesse a rota <span className="font-bold">/tv</span> no navegador da TV Box e digite o código desta playlist:
                   </div>
-                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center shadow-inner">
-                    <span className="text-3xl font-mono font-black text-indigo-600 tracking-widest select-all">
+                  <div className="bg-slate-950/60 border border-slate-850 p-4 rounded-xl text-center shadow-inner">
+                    <span className="text-3xl font-mono font-black text-indigo-400 tracking-widest select-all">
                       {playlists.find(p => p.id === activeTvPlaylistId)?.codigo || '------'}
                     </span>
                   </div>
                 </div>
               ) : (
                 // TVs pareadas e ativas
-                <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto pr-1 space-y-1">
+                <div className="divide-y divide-slate-850 max-h-72 overflow-y-auto pr-1 space-y-1">
                   {tvs.filter(t => t.playlist_id === activeTvPlaylistId).map((tv) => (
                     <div key={tv.id} className="py-3.5 flex flex-col gap-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="bg-emerald-50 text-emerald-600 p-1.5 rounded-lg border border-emerald-100">
-                            <Monitor className="h-4.5 w-4.5" />
+                          <div className="bg-emerald-950/60 text-emerald-400 p-2 rounded-xl border border-emerald-900/30 flex items-center justify-center shadow-inner animate-pulse-glow">
+                            <Monitor className="h-4 w-4" />
                           </div>
                           <div>
-                            <span className="text-xs font-bold text-slate-800 block truncate max-w-[180px]" title={tv.dispositivo_id}>
+                            <span className="text-xs font-bold text-slate-200 block truncate max-w-[180px]" title={tv.dispositivo_id}>
                               ID: {tv.dispositivo_id.substring(0, 8)}...
                             </span>
-                            <span className="text-[10px] text-emerald-650 font-semibold uppercase font-mono">
-                              Conectado
+                            <span className="text-[10px] text-emerald-450 font-semibold uppercase font-mono tracking-wider flex items-center gap-1">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                              Online
                             </span>
                           </div>
                         </div>
                         
-                        <span className="bg-slate-100 border border-slate-200 text-slate-705 text-[10px] px-2 py-0.5 rounded capitalize font-semibold">
+                        <span className="bg-slate-950 border border-slate-850 text-slate-350 text-[10px] px-2 py-0.5 rounded-lg capitalize font-bold font-mono">
                           {tv.orientacao.replace('-', ' ')}
                         </span>
                       </div>
@@ -1151,15 +1205,15 @@ const CMSDashboard: React.FC = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleToggleTvOrientation(tv)}
-                          className="flex-1 flex items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-1.5 px-3 rounded-lg text-xs font-bold transition shadow-sm"
+                          className="flex-1 flex items-center justify-center gap-1 bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 py-2 px-3 rounded-xl text-xs font-bold transition shadow-sm active:scale-95 hover:border-slate-700"
                         >
-                          <RotateCw className="h-3.5 w-3.5" /> Girar Tela (4 vias)
+                          <RotateCw className="h-3.5 w-3.5" /> Girar Tela
                         </button>
                         <button
                           onClick={() => handleDisconnectTv(tv.id)}
-                          className="flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-650 border border-red-200 py-1.5 px-3 rounded-lg text-xs font-bold transition shadow-sm"
+                          className="flex items-center justify-center gap-1 bg-red-950/20 hover:bg-red-900/30 text-red-400 border border-red-900/20 py-2 px-3 rounded-xl text-xs font-bold transition shadow-sm active:scale-95"
                         >
-                          <X className="h-3.5 w-3.5" /> Deslogar
+                          <X className="h-3.5 w-3.5" /> Desconectar
                         </button>
                       </div>
                     </div>
@@ -1168,13 +1222,13 @@ const CMSDashboard: React.FC = () => {
               )}
             </div>
             
-            <footer className="px-5 py-3.5 border-t border-slate-100 bg-slate-50 flex justify-end">
+            <footer className="px-5 py-3.5 border-t border-slate-850 bg-slate-950/40 backdrop-blur-sm flex justify-end">
               <button
                 onClick={() => {
                   setShowTvModal(false);
                   setActiveTvPlaylistId(null);
                 }}
-                className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs py-2 px-4 rounded-lg transition"
+                className="bg-slate-900 hover:bg-slate-850 text-slate-300 font-bold text-xs py-2 px-4.5 rounded-xl transition active:scale-95 border border-slate-800"
               >
                 Fechar
               </button>
@@ -1185,11 +1239,11 @@ const CMSDashboard: React.FC = () => {
 
       {/* MODAL MINHA CONTA */}
       {showProfileModal && licenca && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
-            <header className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <h3 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
-                <User className="h-4.5 w-4.5 text-indigo-500" />
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="glass-panel rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100 border border-slate-800/80">
+            <header className="px-5 py-4 border-b border-slate-850 flex items-center justify-between bg-slate-950/40 backdrop-blur-sm">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+                <User className="h-4.5 w-4.5 text-indigo-400" />
                 Minha Conta
               </h3>
               <button
@@ -1197,59 +1251,59 @@ const CMSDashboard: React.FC = () => {
                   setShowProfileModal(false);
                   setProfileUsername(licenca.username || '');
                 }}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition"
+                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-900 transition active:scale-95"
               >
                 <X className="h-4 w-4" />
               </button>
             </header>
 
-            <form onSubmit={handleSaveProfile} className="p-5 space-y-4">
+            <form onSubmit={handleSaveProfile} className="p-5 space-y-5">
               <div>
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Nome de Usuário</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 ml-1">Nome de Usuário</label>
                 <input
                   type="text"
                   required
                   value={profileUsername}
                   onChange={(e) => setProfileUsername(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
-                  className="w-full rounded-lg border border-slate-350 px-3 py-2 text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-bold text-xs"
+                  className="w-full rounded-xl bg-slate-950/80 border border-slate-850 px-3.5 py-3 text-slate-150 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 font-bold text-xs shadow-inner"
                   placeholder="Seu nome de usuário para login"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Token de Ativação das TVs</label>
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
-                  <span className="font-mono text-sm font-bold text-indigo-700 tracking-wider select-all">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 ml-1">Token de Ativação das TVs</label>
+                <div className="bg-slate-950/60 border border-slate-850 rounded-xl p-3.5 text-center shadow-inner hover:border-indigo-500/20 transition-all duration-300">
+                  <span className="font-mono text-base font-black text-indigo-400 tracking-widest select-all">
                     {licenca.codigo_ativacao}
                   </span>
-                  <p className="text-[10px] text-slate-400 mt-1 uppercase font-semibold">
-                    Use este token para ativar e parear novas TVs
+                  <p className="text-[9px] text-slate-500 mt-1 uppercase font-bold tracking-wider">
+                    Use este token para ativar e parear novas TVs no app player
                   </p>
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Vencimento da Licença</label>
-                <p className="text-xs font-semibold text-slate-700">
-                  {new Date(licenca.data_vencimento).toLocaleDateString('pt-BR')}
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1 ml-1">Vencimento da Licença</label>
+                <p className="text-xs font-bold text-slate-200 ml-1">
+                  📅 {new Date(licenca.data_vencimento).toLocaleDateString('pt-BR')}
                 </p>
               </div>
 
-              <div className="flex gap-3 pt-3 border-t border-slate-100 justify-end">
+              <div className="flex gap-3 pt-4 border-t border-slate-850 justify-end">
                 <button
                   type="button"
                   onClick={() => {
                     setShowProfileModal(false);
                     setProfileUsername(licenca.username || '');
                   }}
-                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs py-2 px-4 rounded-lg transition"
+                  className="bg-slate-900 hover:bg-slate-850 text-slate-355 font-bold text-xs py-2 px-4.5 rounded-xl transition active:scale-95 border border-slate-800"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={profileSaving}
-                  className="bg-[#4f46e5] hover:bg-indigo-700 text-white font-bold text-xs py-2 px-5 rounded-lg transition shadow-sm flex items-center gap-1.5"
+                  className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400 hover:from-indigo-500 hover:to-indigo-300 border border-indigo-500/20 text-white font-bold text-xs py-2 px-5 rounded-xl transition shadow-md shadow-indigo-950/30 flex items-center gap-1.5 active:scale-95"
                 >
                   {profileSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Salvar Alterações'}
                 </button>
@@ -1415,48 +1469,138 @@ const TVPlayer: React.FC = () => {
 
   if (tvStatus === 'pendente' || !session || !licenca || session.user.id !== tvLicencaId) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center bg-slate-950 text-white p-4">
-        <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-8 shadow-2xl">
-          <h2 className="text-center text-3xl font-extrabold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-            Ativar Tela (TV)
-          </h2>
-          <p className="mt-2 text-center text-sm text-slate-400 mb-8">
-            Digite o token de 8 caracteres da sua licença para ativar este dispositivo.
-          </p>
+      <div className="relative flex h-screen w-screen flex-col items-center justify-center px-6 overflow-hidden text-white bg-[#030712] font-sans select-none">
+        {/* Background Blobs Animados */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 bg-[#030712]">
+          <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] animate-blob-1" />
+          <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[120px] animate-blob-2" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/5 rounded-full blur-[150px] animate-blob-3" />
+        </div>
 
-          <form onSubmit={handlePair} className="space-y-6">
-            <div>
-              <label htmlFor="token-code-input" className="sr-only">Token de Licença</label>
-              <input
-                id="token-code-input"
-                type="text"
-                maxLength={8}
-                required
-                value={tokenCode}
-                onChange={(e) => setTokenCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
-                className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-center uppercase tracking-widest font-mono text-2xl font-black"
-                placeholder="TOKEN DE ATIVAÇÃO"
-                disabled={pairingLoading}
-              />
+        {/* Grid responsivo de conteúdo */}
+        <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 items-center z-10">
+          
+          {/* Lado Esquerdo: Logo, Título e Guia de Ativação (7 colunas) */}
+          <div className="md:col-span-7 flex flex-col space-y-6 text-left p-2">
+            <div className="flex items-center gap-3">
+              <div className="relative flex items-center justify-center w-14 h-11 border border-indigo-500/25 rounded-xl bg-slate-950 shadow-[0_0_20px_rgba(99,102,241,0.15)]">
+                <svg className="h-4.5 w-4.5 text-indigo-400 fill-current" viewBox="0 0 24 24">
+                  <polygon points="5 3 19 12 5 21" />
+                </svg>
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-1.5 bg-indigo-500/35 rounded-sm"></div>
+              </div>
+              <div className="flex flex-col items-start leading-none font-sans font-black">
+                <span className="text-xl text-indigo-400 tracking-tight uppercase">MÍDIA</span>
+                <div className="w-full h-[1px] bg-indigo-400/30 my-0.5"></div>
+                <span className="text-xl text-slate-200 tracking-wide uppercase">INDOOR</span>
+              </div>
             </div>
 
-            {pairingError && <p className="text-sm text-red-400 text-center font-semibold">{pairingError}</p>}
+            <div className="space-y-2">
+              <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent tracking-tight">
+                Parear Novo Aparelho
+              </h1>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+                  Pronto para Sincronização
+                </span>
+              </div>
+            </div>
 
-            <button
-              type="submit"
-              disabled={pairingLoading || tokenCode.length !== 8}
-              className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 py-3.5 font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition flex items-center justify-center gap-2"
-            >
-              {pairingLoading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" /> Ativando...
-                </>
-              ) : (
-                'Ativar e Parear Tela'
+            {/* Guia Linha do Tempo */}
+            <div className="relative pl-5 border-l border-indigo-950/80 space-y-5 mt-2">
+              <div className="relative">
+                <div className="absolute -left-[25.5px] top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-500 ring-4 ring-[#030712]" />
+                <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">1. Gere o token no CMS</h4>
+                <p className="text-[11px] text-slate-400 leading-normal">
+                  Acesse o painel do administrador em outro computador ou celular, vá na aba <strong>TVs</strong> e clique em Adicionar.
+                </p>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -left-[25.5px] top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-500 ring-4 ring-[#030712]" />
+                <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">2. Insira o token ao lado</h4>
+                <p className="text-[11px] text-slate-400 leading-normal">
+                  Digite o código de pareamento temporário de 8 dígitos exibido no painel neste dispositivo.
+                </p>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -left-[25.5px] top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-500 ring-4 ring-[#030712]" />
+                <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">3. Pronto! Sinalização ativa</h4>
+                <p className="text-[11px] text-slate-400 leading-normal">
+                  A TV começará a baixar e exibir suas fotos e vídeos programados em tela cheia de forma automatizada.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Lado Direito: Card de Pareamento (5 colunas) */}
+          <div className="md:col-span-5 w-full rounded-2xl glass-panel p-8 shadow-2xl relative border border-slate-800/80 hover:border-indigo-500/20 transition-all duration-500 flex flex-col justify-between min-h-[360px] group">
+            {/* Glow no topo do card */}
+            <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+
+            <div className="flex flex-col items-center mb-5">
+              <div className="w-11 h-11 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(99,102,241,0.15)] group-hover:scale-105 transition-transform duration-300">
+                <Monitor className="h-5.5 w-5.5 text-indigo-400" />
+              </div>
+              <h3 className="text-center text-base font-black tracking-tight text-slate-100 uppercase">
+                ATIVAR PLAYER
+              </h3>
+              <p className="mt-1 text-center text-[10px] text-slate-400 uppercase tracking-wider">
+                Código de Pareamento
+              </p>
+            </div>
+
+            <form onSubmit={handlePair} className="space-y-4">
+              <div>
+                <label htmlFor="token-code-input" className="sr-only">Token de Licença</label>
+                <input
+                  id="token-code-input"
+                  type="text"
+                  maxLength={8}
+                  required
+                  value={tokenCode}
+                  onChange={(e) => setTokenCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
+                  className="w-full rounded-xl border border-slate-850 bg-slate-950/80 px-4 py-4 text-white placeholder-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 text-center uppercase tracking-widest font-mono text-2xl font-black transition-all duration-200 shadow-inner"
+                  placeholder="--------"
+                  disabled={pairingLoading}
+                />
+              </div>
+
+              {pairingError && (
+                <p className="text-[11px] text-red-400 text-center font-bold bg-red-950/20 border border-red-900/30 py-2 px-3 rounded-lg animate-pulse leading-snug">
+                  ⚠️ {pairingError}
+                </p>
               )}
-            </button>
-          </form>
-          <p className="text-[10px] text-slate-500 text-center mt-8 font-mono">Dispositivo ID: {dispositivoId}</p>
+
+              <button
+                type="submit"
+                disabled={pairingLoading || tokenCode.length !== 8}
+                className="w-full rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 py-3.5 font-bold text-xs text-white uppercase tracking-wider hover:opacity-95 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-indigo-950/30"
+              >
+                {pairingLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Pareando...
+                  </>
+                ) : (
+                  'Ativar e Conectar Tela'
+                )}
+              </button>
+            </form>
+            
+            <div className="border-t border-slate-900 mt-5 pt-4 text-center">
+              <p className="text-[9px] text-slate-500 font-mono tracking-wide">
+                DISPOSITIVO ID:<br/>
+                <span className="text-slate-400 select-all">{dispositivoId}</span>
+              </p>
+            </div>
+          </div>
+
         </div>
       </div>
     );
@@ -1575,6 +1719,15 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
   const [playlist, setPlaylist] = useState<any[]>([]);
   const [activePlaylistInfo, setActivePlaylistInfo] = useState<{ id: string; nome: string; codigo: string } | null>(null);
   const [indiceAtual, setIndiceAtual] = useState(0);
+
+  const [localTime, setLocalTime] = useState(new Date());
+
+  useEffect(() => {
+    const clockTimer = setInterval(() => {
+      setLocalTime(new Date());
+    }, 1000);
+    return () => clearInterval(clockTimer);
+  }, []);
 
   // States para a tela de Boot e configurações
   const [mostrarBoot, setMostrarBoot] = useState(true);
@@ -1939,103 +2092,235 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-black overflow-hidden select-none relative">
       <div style={rotationStyle} className={`transition-transform duration-500 ease-in-out flex items-center justify-center relative w-full h-full overflow-hidden ${
-        mostrarBoot ? 'bg-white' : 'bg-black'
+        mostrarBoot ? 'bg-[#030712]' : 'bg-black'
       }`}>
         
         {mostrarBoot ? (
           // ==========================================
-          // TELA DE BOOT CUSTOMIZADA (MÍDIA INDOOR)
+          // TELA DE BOOT CUSTOMIZADA (MÍDIA INDOOR - SMART TV DASHBOARD)
           // ==========================================
-          <div className="w-full max-w-md flex flex-col items-center space-y-6 px-6 text-slate-800">
-            {/* Logo Customizada */}
-            <div className="flex items-center justify-center gap-3">
-              <div className="relative flex items-center justify-center w-20 h-14 border-[5px] border-indigo-950 rounded-xl bg-white shadow-md">
-                <svg className="h-6 w-6 text-[#1e40af] fill-current" viewBox="0 0 24 24">
-                  <polygon points="5 3 19 12 5 21" />
-                </svg>
-                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-3 bg-indigo-950 rounded-sm"></div>
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-2 bg-indigo-950"></div>
-              </div>
-              <div className="flex flex-col items-start leading-none font-sans font-black font-extrabold">
-                <span className="text-3xl text-[#1e40af] tracking-tight uppercase">MÍDIA</span>
-                <div className="w-full h-1 bg-[#1e40af] my-0.5"></div>
-                <span className="text-3xl text-slate-800 tracking-wide uppercase">INDOOR</span>
-              </div>
+          <div className="relative flex h-full w-full items-center justify-center text-white p-6 font-sans select-none">
+            {/* Background Blobs Animados */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute -top-40 -left-40 w-[450px] h-[450px] bg-indigo-600/10 rounded-full blur-[120px] animate-blob-1" />
+              <div className="absolute -bottom-40 -right-40 w-[450px] h-[450px] bg-cyan-600/10 rounded-full blur-[120px] animate-blob-2" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/5 rounded-full blur-[150px] animate-blob-3" />
             </div>
 
-            {/* Info da Licença / Usuário */}
-            <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-left space-y-2 shadow-sm text-xs">
-              <div className="flex justify-between items-center pb-1 border-b border-slate-100">
-                <span className="font-semibold text-slate-500">Status:</span>
-                <span className="bg-emerald-100 border border-emerald-300 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                  Ativado
-                </span>
-              </div>
-              <div className="flex justify-between items-center pb-1 border-b border-slate-100">
-                <span className="font-semibold text-slate-500">Usuário:</span>
-                <span className="font-bold text-slate-800 truncate max-w-[200px]" title={session?.user?.email || ''}>
-                  {session?.user?.email ? session.user.email.split('@')[0].toUpperCase() : '---'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-slate-500">Vencimento:</span>
-                <span className="font-bold text-slate-850">
-                  {licenca?.data_vencimento ? new Date(licenca.data_vencimento).toLocaleDateString('pt-BR') : '---'}
-                </span>
-              </div>
-            </div>
+            <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-6 z-10">
+              
+              {/* Painel Lateral Esquerdo: Status & Relógio (4 colunas) */}
+              <div className="md:col-span-4 rounded-2xl glass-panel p-6 border border-slate-800/80 flex flex-col justify-between shadow-2xl min-h-[380px]">
+                <div className="space-y-6">
+                  {/* Logo */}
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex items-center justify-center w-12 h-10 border border-indigo-500/25 rounded-lg bg-slate-950 shadow-md">
+                      <svg className="h-4.5 w-4.5 text-indigo-400 fill-current" viewBox="0 0 24 24">
+                        <polygon points="5 3 19 12 5 21" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col items-start leading-none font-black text-xs">
+                      <span className="text-indigo-400 tracking-tight">MÍDIA</span>
+                      <span className="text-slate-200 tracking-wide">INDOOR</span>
+                    </div>
+                  </div>
 
-            {/* Painel de Botões Alinhado */}
-            <div className="w-full space-y-4">
-              {/* Linha 1: Mídia Indoor */}
-              <div className="flex items-center justify-between w-full">
-                <div className="w-36 text-right font-bold text-slate-700 text-[11px] tracking-wider uppercase flex items-center justify-end gap-1.5 pr-2">
-                  <svg className="h-3.5 w-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                  Mídia Indoor
+                  {/* Relógio Digital */}
+                  <div className="space-y-1 text-left">
+                    <p className="text-3xl sm:text-4xl font-black font-mono tracking-wider text-indigo-400 bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                      {localTime.toLocaleTimeString('pt-BR')}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-1">
+                      {localTime.toLocaleDateString('pt-BR', { 
+                        weekday: 'short', 
+                        day: '2-digit', 
+                        month: 'short', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { setActiveModal('url'); }}
-                    className="bg-[#52525b] hover:bg-[#3f3f46] text-white py-2.5 rounded text-xs font-bold w-28 tracking-wider transition uppercase shadow-sm"
-                  >
-                    URL/Código
-                  </button>
-                  <button
-                    onClick={() => { if (playlist.length > 0) setMostrarBoot(false); }}
-                    disabled={playlist.length === 0}
-                    className="bg-[#52525b] hover:bg-[#3f3f46] disabled:opacity-50 text-white py-2.5 rounded text-xs font-bold w-28 tracking-wider transition uppercase border border-indigo-400/20 shadow-sm"
-                  >
-                    {(activeModal || showSettings) ? 'Iniciar' : `Iniciar (${countdown}s)`}
-                  </button>
+
+                {/* Info Licença */}
+                <div className="space-y-3 border-t border-slate-900 pt-5 text-left text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-medium">Status:</span>
+                    <span className="bg-emerald-950/60 border border-emerald-900/30 text-emerald-400 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest animate-pulse">
+                      ATIVO
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-medium">Usuário:</span>
+                    <span className="font-bold text-slate-200 truncate max-w-[150px]" title={session?.user?.email || ''}>
+                      {session?.user?.email ? session.user.email.split('@')[0].toUpperCase() : '---'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-medium">Expiração:</span>
+                    <span className="font-bold text-slate-200">
+                      {licenca?.data_vencimento ? new Date(licenca.data_vencimento).toLocaleDateString('pt-BR') : '---'}
+                    </span>
+                  </div>
+                  <div className="text-[9px] text-slate-550 font-mono mt-2 pt-2 border-t border-slate-950 truncate select-all" title={dispositivoId}>
+                    ID: {dispositivoId}
+                  </div>
                 </div>
               </div>
 
-              {/* Linha 2: Configurações */}
-              <div className="flex items-center justify-between w-full">
-                <div className="w-36 text-right font-bold text-slate-700 text-[11px] tracking-wider uppercase flex items-center justify-end gap-1.5 pr-2">
-                  <svg className="h-3.5 w-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                  </svg>
-                  Configurações
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { setShowSettings(true); }}
-                    className="bg-[#52525b] hover:bg-[#3f3f46] text-white py-2.5 rounded text-xs font-bold w-28 tracking-wider transition uppercase shadow-sm"
-                  >
-                    Rotação
-                  </button>
-                  <button
-                    onClick={() => { setActiveModal('config'); }}
-                    className="bg-[#52525b] hover:bg-[#3f3f46] text-white py-2.5 rounded text-xs font-bold w-28 tracking-wider transition uppercase shadow-sm"
-                  >
-                    Config
-                  </button>
-                </div>
+              {/* Painel Direito: Grade de Cards Interativos (8 colunas) */}
+              <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                {/* Card 1: Iniciar Player (Padrão/Countdown) */}
+                <button
+                  onClick={() => { if (playlist.length > 0) setMostrarBoot(false); }}
+                  disabled={playlist.length === 0}
+                  className={`relative overflow-hidden text-left p-6 rounded-2xl glass-panel-hover glass-panel border flex flex-col justify-between transition-all duration-300 min-h-[180px] group ${
+                    playlist.length === 0 
+                      ? 'opacity-50 cursor-not-allowed border-slate-900' 
+                      : 'border-slate-800/80 hover:border-indigo-500/40 shadow-lg'
+                  }`}
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-bl-full pointer-events-none group-hover:bg-indigo-500/10 transition-colors" />
+                  
+                  <div className="flex justify-between items-start w-full">
+                    <div>
+                      <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Ação Principal</p>
+                      <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight mt-1">Iniciar Player</h3>
+                    </div>
+                    {/* Anel Circular de Contagem Regressiva em SVG */}
+                    {playlist.length > 0 && !(activeModal || showSettings) && (
+                      <div className="relative flex items-center justify-center w-11 h-11">
+                        <svg className="w-11 h-11 transform -rotate-90">
+                          {/* Background Circle */}
+                          <circle
+                            cx="22"
+                            cy="22"
+                            r="18"
+                            className="text-slate-800/50"
+                            strokeWidth="3.5"
+                            stroke="currentColor"
+                            fill="transparent"
+                          />
+                          {/* Animated Foreground Circle */}
+                          <circle
+                            cx="22"
+                            cy="22"
+                            r="18"
+                            className="text-indigo-400 transition-all duration-1000 ease-linear"
+                            strokeWidth="3.5"
+                            strokeDasharray={2 * Math.PI * 18}
+                            strokeDashoffset={(2 * Math.PI * 18) - (countdown / 10) * (2 * Math.PI * 18)}
+                            strokeLinecap="round"
+                            stroke="currentColor"
+                            fill="transparent"
+                          />
+                        </svg>
+                        <span className="absolute text-[11px] font-black font-mono text-slate-100">
+                          {countdown}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5 mt-4">
+                    <p className="text-xs text-slate-400 line-clamp-1">
+                      {playlist.length > 0 
+                        ? `Playlist ativa: ${activePlaylistInfo?.nome || 'Padrão'}` 
+                        : 'Nenhuma playlist sincronizada'}
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-indigo-400 bg-indigo-950/45 px-2 py-0.5 rounded border border-indigo-900/35 uppercase tracking-wider">
+                      {playlist.length} {playlist.length === 1 ? 'Mídia' : 'Mídias'}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Card 2: Código da Playlist */}
+                <button
+                  onClick={() => setActiveModal('url')}
+                  className="relative overflow-hidden text-left p-6 rounded-2xl glass-panel-hover glass-panel border border-slate-800/80 hover:border-indigo-500/40 flex flex-col justify-between transition-all duration-300 min-h-[180px] group"
+                >
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-500/5 rounded-bl-full pointer-events-none group-hover:bg-cyan-500/10 transition-colors" />
+                  
+                  <div className="flex justify-between items-start w-full">
+                    <div>
+                      <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Sincronização</p>
+                      <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight mt-1">Playlist</h3>
+                    </div>
+                    <div className="p-2 rounded-lg bg-cyan-600/10 border border-cyan-500/20 text-cyan-400">
+                      <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 mt-4">
+                    <p className="text-xs text-slate-400 truncate">
+                      {activePlaylistInfo ? `Nome: ${activePlaylistInfo.nome}` : 'Sincronizar playlist via código de 8 dígitos'}
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-cyan-400 bg-cyan-950/45 px-2 py-0.5 rounded border border-cyan-900/35 uppercase tracking-wider">
+                      {activePlaylistInfo ? `CÓDIGO: ${activePlaylistInfo.codigo}` : 'PENDENTE'}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Card 3: Ajustar Rotação */}
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="relative overflow-hidden text-left p-6 rounded-2xl glass-panel-hover glass-panel border border-slate-800/80 hover:border-indigo-500/40 flex flex-col justify-between transition-all duration-300 min-h-[180px] group"
+                >
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-violet-500/5 rounded-bl-full pointer-events-none group-hover:bg-violet-500/10 transition-colors" />
+                  
+                  <div className="flex justify-between items-start w-full">
+                    <div>
+                      <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Tela e Orientação</p>
+                      <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight mt-1">Ajustar Rotação</h3>
+                    </div>
+                    <div className="p-2 rounded-lg bg-violet-600/10 border border-violet-500/20 text-violet-400">
+                      <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 mt-4">
+                    <p className="text-xs text-slate-400 capitalize truncate">
+                      Orientação: {orientacao.replace('-', ' ')}
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-violet-400 bg-violet-950/45 px-2 py-0.5 rounded border border-violet-900/35 uppercase tracking-wider">
+                      {orientacao === 'horizontal' || orientacao === 'horizontal-invertido' ? 'Paisagem' : 'Retrato'}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Card 4: Desvincular Aparelho */}
+                <button
+                  onClick={handlePlayerUnlink}
+                  className="relative overflow-hidden text-left p-6 rounded-2xl glass-panel-hover glass-panel border border-slate-800/80 hover:border-red-500/20 flex flex-col justify-between transition-all duration-300 min-h-[180px] group"
+                >
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/5 rounded-bl-full pointer-events-none group-hover:bg-red-500/10 transition-colors" />
+                  
+                  <div className="flex justify-between items-start w-full">
+                    <div>
+                      <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Configuração</p>
+                      <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight mt-1">Desvincular Tela</h3>
+                    </div>
+                    <div className="p-2 rounded-lg bg-red-650/10 border border-red-500/20 text-red-400">
+                      <Trash2 className="h-4.5 w-4.5" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 mt-4">
+                    <p className="text-xs text-slate-400">
+                      Desconecta esta TV Box da conta do CMS.
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-red-400 bg-red-950/45 px-2 py-0.5 rounded border border-red-900/35 uppercase tracking-wider">
+                      Desvincular
+                    </span>
+                  </div>
+                </button>
+
               </div>
+
             </div>
           </div>
         ) : (

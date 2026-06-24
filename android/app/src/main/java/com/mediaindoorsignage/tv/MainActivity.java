@@ -11,6 +11,7 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     private static final int OVERLAY_PERMISSION_REQ_CODE = 5469;
+    public static boolean isAppVisible = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -24,6 +25,32 @@ public class MainActivity extends BridgeActivity {
 
         // Request overlay permission (system alert window) for drawing over other apps and auto-start on boot
         checkAndRequestOverlayPermission();
+
+        // Start background auto-launch checker service as foreground service on Oreo+
+        Intent serviceIntent = new Intent(this, AutoLaunchService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        isAppVisible = true;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        isAppVisible = false;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        isAppVisible = false;
     }
 
     @Override
