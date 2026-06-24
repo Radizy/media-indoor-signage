@@ -411,11 +411,11 @@ export const PlaylistBuilder: React.FC = () => {
                             <button
                               key={diaIdx}
                               onClick={() => handleToggleDiaSemana(item.id, item.dias_semana || [0,1,2,3,4,5,6], diaIdx)}
-                              className={`w-3.5 h-3.5 text-[8px] font-black rounded flex items-center justify-center transition-all ${
-                                ativo 
-                                  ? 'bg-indigo-600 text-white font-black hover:bg-indigo-700' 
-                                  : 'bg-slate-950 text-slate-600 hover:bg-slate-900 border border-slate-850'
-                              }`}
+                                className={`w-3.5 h-3.5 text-[8px] font-bold rounded flex items-center justify-center transition-all ${
+                                  ativo 
+                                    ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.3)]' 
+                                    : 'bg-slate-950 text-slate-500 border border-slate-850 hover:bg-slate-900 hover:text-slate-300'
+                                }`}
                               title={`${diaLabel} (Clique para alternar)`}
                             >
                               {diaLabel}
