@@ -18,6 +18,9 @@ import {
   Copy, 
   Check, 
   Info,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
   FileVideo,
   FileImage,
   Loader2,
@@ -275,6 +278,7 @@ const CMSDashboard: React.FC = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileUsername, setProfileUsername] = useState(licenca?.username || '');
   const [profileSaving, setProfileSaving] = useState(false);
+  const [showSpecs, setShowSpecs] = useState(false);
 
   useEffect(() => {
     if (licenca?.username) {
@@ -747,47 +751,134 @@ const CMSDashboard: React.FC = () => {
       {/* CONTAINER PRINCIPAL */}
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
         
-        {/* BANNER DE INFORMAÇÕES IMPORTANTE */}
-        <div className="bg-[#e0f2fe] border border-sky-200 rounded-xl p-5 text-sky-900 space-y-3.5 shadow-sm">
-          <p className="text-sm flex flex-wrap items-center gap-2">
-            Bem-vindo <span className="font-bold">{licenca?.codigo_ativacao}</span>!
-            <span className="text-xs text-sky-850 bg-white/70 px-2 py-0.5 rounded-lg border border-sky-300">
-              Token de ativação das TVs: <span className="font-mono font-bold select-all">{licenca?.codigo_ativacao}</span>
-            </span>
-          </p>
-          
-          <div className="space-y-1">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-sky-800 flex items-center gap-1">
-              <Info className="h-4 w-4" /> Atenção - Leia antes de criar sua playlist
-            </h3>
-            <ul className="text-xs list-disc list-inside space-y-1 pl-1 text-sky-950 font-medium">
-              <li>Tamanho máximo de arquivo: <span className="font-bold">99MB</span></li>
-              <li>Vídeos somente no formato <span className="font-bold">MP4</span>. Imagens somente <span className="font-bold">JPG ou PNG</span>.</li>
-              <li>Tamanho ideal para vídeos ou imagens:
-                <ul className="list-circle pl-6 mt-1 space-y-0.5 font-normal">
-                  <li>Horizontal: <span className="font-bold">1280px x 720px</span></li>
-                  <li>Vertical: <span className="font-bold">720px x 1280px</span></li>
-                </ul>
-              </li>
-            </ul>
+        {/* BANNER DE BOAS-VINDAS E ORIENTAÇÕES */}
+        <div className="bg-white border border-slate-250/80 rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                Olá, <span className="text-indigo-650 capitalize">{licenca?.username}</span>! 👋
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Gerencie suas mídias e monitore o status de suas telas de forma simples.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-150 px-3 py-2 rounded-xl shrink-0">
+              <div className="text-left">
+                <p className="text-[10px] uppercase font-bold text-indigo-500 tracking-wider">Token de Ativação TV</p>
+                <p className="text-sm font-mono font-black text-indigo-700 tracking-widest uppercase select-all">{licenca?.codigo_ativacao}</p>
+              </div>
+              <button
+                onClick={() => handleCopyCode(licenca?.codigo_ativacao)}
+                className="bg-white hover:bg-slate-50 border border-indigo-200 p-1.5 rounded-lg text-indigo-600 transition shadow-sm ml-1"
+                title="Copiar Token"
+              >
+                {copiedId === licenca?.codigo_ativacao ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+              </button>
+            </div>
           </div>
 
-          <p className="text-xs font-bold text-red-600">
-            Nunca insira vídeos ou imagens maiores que:
-          </p>
-          <p className="text-xs font-semibold text-sky-900">
-            Horizontal: <span className="font-bold">1920px x 1080px</span> - Vertical: <span className="font-bold">1080px x 1920px</span>
-          </p>
+          <div className="space-y-3.5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50 border border-slate-150 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-slate-800">
+                    Requisitos e Limites de Mídia
+                  </h3>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-650 font-medium">
+                    <span>• Arquivos até <strong className="text-slate-800">99MB</strong></span>
+                    <span>• Vídeos em <strong className="text-slate-800">MP4</strong></span>
+                    <span>• Imagens em <strong className="text-slate-800">JPG ou PNG</strong></span>
+                  </div>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => setShowSpecs(!showSpecs)}
+                className="flex items-center gap-1 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-sm transition"
+              >
+                {showSpecs ? (
+                  <>
+                    Ocultar Resoluções Ideais <ChevronUp className="h-3.5 w-3.5 text-slate-500" />
+                  </>
+                ) : (
+                  <>
+                    Ver Resoluções Ideais <ChevronDown className="h-3.5 w-3.5 text-slate-500" />
+                  </>
+                )}
+              </button>
+            </div>
 
-          <p className="text-[11px] font-bold tracking-wide uppercase text-sky-800">
-            O bom funcionamento do sistema depende somente da qualidade das suas mídias.
-          </p>
+            {showSpecs && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-slate-150 rounded-xl p-4 bg-slate-50/50 animate-fade-in">
+                {/* Horizontal */}
+                <div className="bg-white border border-slate-150 rounded-xl p-4 space-y-3 shadow-sm">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    📺 Horizontal (Modo Paisagem)
+                  </h4>
+                  <div className="divide-y divide-slate-100 text-xs">
+                    <div className="py-2 flex justify-between">
+                      <span className="font-semibold text-slate-750">1080p (Full HD - Recomendado)</span>
+                      <span className="font-mono font-bold text-slate-900">1920px x 1080px</span>
+                    </div>
+                    <div className="py-2 flex justify-between">
+                      <span className="font-semibold text-slate-750">2K (Quad HD)</span>
+                      <span className="font-mono font-bold text-slate-900">2560px x 1440px</span>
+                    </div>
+                    <div className="py-2 flex justify-between">
+                      <span className="font-semibold text-slate-750">4K (Ultra HD)</span>
+                      <span className="font-mono font-bold text-slate-900">3840px x 2160px</span>
+                    </div>
+                  </div>
+                </div>
 
-          <div className="flex gap-2 pt-1.5">
-            <a href="https://microcosmo.io" target="_blank" rel="noreferrer" className="flex items-center gap-1 bg-[#64748b] hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold text-white shadow-sm transition">
+                {/* Vertical */}
+                <div className="bg-white border border-slate-150 rounded-xl p-4 space-y-3 shadow-sm">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    📱 Vertical (Modo Retrato)
+                  </h4>
+                  <div className="divide-y divide-slate-100 text-xs">
+                    <div className="py-2 flex justify-between">
+                      <span className="font-semibold text-slate-755">1080p (Full HD - Recomendado)</span>
+                      <span className="font-mono font-bold text-slate-900">1080px x 1920px</span>
+                    </div>
+                    <div className="py-2 flex justify-between">
+                      <span className="font-semibold text-slate-755">2K (Quad HD)</span>
+                      <span className="font-mono font-bold text-slate-900">1440px x 2560px</span>
+                    </div>
+                    <div className="py-2 flex justify-between">
+                      <span className="font-semibold text-slate-755">4K (Ultra HD)</span>
+                      <span className="font-mono font-bold text-slate-900">2160px x 3840px</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informação Técnica e Alerta */}
+                <div className="col-span-1 md:col-span-2 bg-[#fef2f2] border border-[#fecaca] rounded-xl p-4 flex items-start gap-3 text-red-900">
+                  <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                  <div className="space-y-1.5 text-xs text-red-850">
+                    <h5 className="font-bold text-red-800">Diretrizes de Desempenho e Compatibilidade (TV Box)</h5>
+                    <p className="leading-relaxed">
+                      • <strong className="text-red-950">Evite usar qualidades 2K ou 4K e vídeos de 60fps</strong>. A grande maioria das TV Boxes comerciais do mercado (MX9, Aquário, etc.) possuem processadores modestos que travam ou engasgam ao renderizar essas resoluções.
+                    </p>
+                    <p className="leading-relaxed">
+                      • <strong className="text-red-950">Ajuste de FPS & Bitrate recomendado:</strong> Para 1080p, configure seus vídeos para <strong className="text-red-950">30fps</strong> com bitrate máximo de <strong className="text-red-950">6 Mbps (Codec H.264)</strong>. Isso garante reprodução fluida e sem travamentos por superaquecimento.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <a href="https://microcosmo.io" target="_blank" rel="noreferrer" className="flex items-center gap-1 bg-[#64748b] hover:bg-slate-600 px-3.5 py-2 rounded-xl text-xs font-semibold text-white shadow-sm transition">
               <HelpCircle className="h-3.5 w-3.5" /> Como otimizar mídias
             </a>
-            <button className="flex items-center gap-1 bg-slate-400 opacity-60 cursor-not-allowed px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition">
+            <button className="flex items-center gap-1 bg-slate-300 text-slate-500 opacity-60 cursor-not-allowed px-3.5 py-2 rounded-xl text-xs font-semibold transition">
               Ajuda (em breve)
             </button>
           </div>
