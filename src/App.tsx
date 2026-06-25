@@ -311,6 +311,7 @@ const CMSDashboard: React.FC = () => {
 
   // Profile settings state
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showMobileTvsModal, setShowMobileTvsModal] = useState(false);
   const [profileUsername, setProfileUsername] = useState(licenca?.username || '');
   const [profileSaving, setProfileSaving] = useState(false);
   const [showSpecs, setShowSpecs] = useState(false);
@@ -460,6 +461,41 @@ const CMSDashboard: React.FC = () => {
     } catch (err) {
       console.error(err);
       alert('Erro ao desconectar dispositivo.');
+    }
+  };
+
+  // Renomeia a TV com nome personalizado
+  const handleRenameTv = async (tvId: string, nomeAtual: string) => {
+    const novoNome = prompt('Digite o novo nome para esta TV:', nomeAtual || '');
+    if (novoNome === null) return;
+    
+    try {
+      const { error } = await supabase
+        .from('tvs')
+        .update({ nome: novoNome.trim() || null })
+        .eq('id', tvId);
+
+      if (error) throw error;
+      fetchTvs();
+    } catch (err: any) {
+      console.error('Erro ao renomear TV:', err);
+      alert('Erro ao renomear TV: ' + err.message);
+    }
+  };
+
+  // Altera a playlist vinculada da TV no dropdown
+  const handleTvPlaylistChange = async (tvId: string, playlistId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('tvs')
+        .update({ playlist_id: playlistId || null })
+        .eq('id', tvId);
+
+      if (error) throw error;
+      fetchTvs();
+    } catch (err: any) {
+      console.error('Erro ao associar playlist:', err);
+      alert('Erro ao associar playlist: ' + err.message);
     }
   };
 
@@ -773,6 +809,133 @@ const CMSDashboard: React.FC = () => {
     }
   };
 
+  // Renderizador do painel lateral ou modal de gerenciamento de TVs
+  const renderTvsManagerPanel = (isMobile: boolean = false) => {
+    return (
+      <div className={`glass-panel border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl flex flex-col ${isMobile ? 'h-full bg-slate-950/95' : 'bg-slate-905/40'}`}>
+        <header className="px-4.5 py-4 border-b border-slate-850 flex items-center justify-between bg-slate-950/40 shrink-0">
+          <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+            <Monitor className="h-4.5 w-4.5 text-indigo-400" />
+            Minhas TVs ({tvs.length})
+          </h3>
+          {isMobile && (
+            <button
+              onClick={() => setShowMobileTvsModal(false)}
+              className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-900 transition"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </header>
+
+        <div className={`p-4.5 space-y-4 overflow-y-auto ${isMobile ? 'flex-1 max-h-[70vh]' : 'max-h-[600px]'}`}>
+          <p className="text-[11px] text-slate-450 leading-relaxed">
+            Direcione a programação e gerencie o nome de cada tela em tempo real.
+          </p>
+
+          {tvs.length === 0 ? (
+            <div className="text-center py-8 text-slate-500 flex flex-col items-center gap-2">
+              <Monitor className="h-8 w-8 text-slate-650 opacity-60 animate-pulse" />
+              <p className="text-xs font-bold text-slate-400">Nenhuma TV conectada</p>
+              <p className="text-[10px] text-slate-550 max-w-[200px] leading-normal mx-auto">
+                Use o Token de Ativação do topo no app player para parear.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {tvs.map((tv) => {
+                const displayName = tv.nome || `TV - ${tv.dispositivo_id.substring(0, 5).toUpperCase()}`;
+                const isOnline = tv.status === 'pareado';
+                return (
+                  <div 
+                    key={tv.id} 
+                    className="p-3.5 rounded-xl bg-slate-950/50 border border-slate-850 hover:border-slate-800 transition-all duration-300 space-y-3 shadow-inner hover:shadow-indigo-950/5 relative group/tvcard"
+                  >
+                    {/* Status e Título */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span 
+                          className="text-xs font-bold text-slate-200 truncate pr-1" 
+                          title={displayName}
+                        >
+                          {displayName}
+                        </span>
+                        <button
+                          onClick={() => handleRenameTv(tv.id, tv.nome || '')}
+                          title="Renomear TV"
+                          className="text-slate-500 hover:text-indigo-400 p-0.5 hover:bg-slate-900 rounded-md transition duration-150 shrink-0"
+                        >
+                          <Edit2 className="h-3 w-3" />
+                        </button>
+                      </div>
+
+                      <span className="bg-slate-950 border border-slate-850 text-slate-450 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold capitalize shrink-0">
+                        {tv.orientacao ? tv.orientacao.replace('-', ' ') : 'horizontal'}
+                      </span>
+                    </div>
+
+                    {/* Status Info */}
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-450 font-semibold uppercase tracking-wider">Status:</span>
+                      {isOnline ? (
+                        <span className="text-emerald-450 font-bold uppercase font-mono tracking-wider flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                          Online
+                        </span>
+                      ) : (
+                        <span className="text-amber-500 font-bold uppercase font-mono tracking-wider flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 inline-block"></span>
+                          Pendente
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Seleção de Playlist */}
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold text-slate-450 uppercase tracking-wider block">
+                        Playlist Ativa
+                      </label>
+                      <select
+                        value={tv.playlist_id || ''}
+                        onChange={(e) => handleTvPlaylistChange(tv.id, e.target.value || null)}
+                        className="w-full rounded-lg border border-slate-850 bg-slate-950 text-slate-200 py-1.5 px-2.5 text-xs font-semibold focus:border-indigo-500 focus:outline-none transition cursor-pointer font-sans"
+                      >
+                        <option value="" className="text-slate-500">Sem Programação (Desvinculada)</option>
+                        {playlists.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.nome} ({p.codigo})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Ações da TV */}
+                    <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-slate-900/60">
+                      <button
+                        onClick={() => handleToggleTvOrientation(tv)}
+                        className="flex items-center justify-center gap-1 bg-slate-900/40 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 text-slate-300 py-1.5 px-2 rounded-lg text-[10px] font-bold transition shadow-sm active:scale-95"
+                        title="Girar Orientação da Tela"
+                      >
+                        <RotateCw className="h-3 w-3 text-slate-400" /> Girar
+                      </button>
+                      <button
+                        onClick={() => handleDisconnectTv(tv.id)}
+                        className="flex items-center justify-center gap-1 bg-red-950/10 hover:bg-red-950/20 text-red-400/90 border border-red-950/30 py-1.5 px-2 rounded-lg text-[10px] font-bold transition shadow-sm active:scale-95"
+                        title="Desconectar do Painel"
+                      >
+                        <X className="h-3 w-3 text-red-500" /> Desconectar
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Formata o tamanho do arquivo
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -877,6 +1040,14 @@ const CMSDashboard: React.FC = () => {
             </>
           )}
 
+          {/* Botão de TVs visível apenas no Mobile */}
+          <button
+            onClick={() => setShowMobileTvsModal(true)}
+            className="lg:hidden flex items-center justify-center gap-1 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400 hover:from-indigo-500 hover:to-indigo-300 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-indigo-950/20 transition hover:-translate-y-0.5 active:scale-95 flex-1 md:flex-none min-w-[120px]"
+          >
+            <Monitor className="h-3.5 w-3.5" /> <span>Minhas TVs</span>
+          </button>
+
           <button
             onClick={() => setShowProfileModal(true)}
             className="flex items-center justify-center gap-1 bg-gradient-to-r from-violet-600 via-violet-500 to-violet-400 hover:from-violet-500 hover:to-violet-300 border border-violet-500/20 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-md shadow-violet-950/20 transition hover:-translate-y-0.5 active:scale-95 flex-1 md:flex-none min-w-[120px]"
@@ -894,10 +1065,13 @@ const CMSDashboard: React.FC = () => {
       </header>
 
       {/* CONTAINER PRINCIPAL */}
-      <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-6">
-        
-        {/* BANNER DE BOAS-VINDAS E ORIENTAÇÕES */}
-        <div className="glass-panel border border-slate-800/80 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 relative overflow-hidden group">
+      <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          {/* COLUNA ESQUERDA: CONTEÚDO PRINCIPAL (8/9 colunas no desktop) */}
+          <div className="lg:col-span-8 xl:col-span-9 space-y-6">
+            {/* BANNER DE BOAS-VINDAS E ORIENTAÇÕES */}
+            <div className="glass-panel border border-slate-800/80 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-44 h-44 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none -z-10 group-hover:bg-indigo-500/10 transition-all duration-500" />
           
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-850">
@@ -1280,6 +1454,14 @@ const CMSDashboard: React.FC = () => {
             )}
           </div>
         )}
+          </div>
+
+          {/* COLUNA DIREITA: GERENCIAMENTO DE TVS (Apenas no desktop - lg:block) */}
+          <div className="hidden lg:block lg:col-span-4 xl:col-span-3 shrink-0">
+            {renderTvsManagerPanel(false)}
+          </div>
+
+        </div>
       </main>
 
       {/* MODAL DE CONTROLE E PAREAMENTO DA TV */}
@@ -1454,6 +1636,15 @@ const CMSDashboard: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL MOBILE DE GERENCIAMENTO DE TVS */}
+      {showMobileTvsModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in lg:hidden">
+          <div className="w-full max-w-md">
+            {renderTvsManagerPanel(true)}
           </div>
         </div>
       )}
