@@ -1615,12 +1615,8 @@ const TVPlayer: React.FC = () => {
   if (tvStatus === 'pendente' || !session || !licenca || session.user.id !== tvLicencaId) {
     return (
       <div className="relative flex h-screen w-screen flex-col items-center justify-center px-6 overflow-hidden text-white bg-[#030712] font-sans select-none">
-        {/* Background Blobs Animados */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 bg-[#030712]">
-          <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] animate-blob-1" />
-          <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[120px] animate-blob-2" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/5 rounded-full blur-[150px] animate-blob-3" />
-        </div>
+        {/* Background simplificado sem blobs para evitar lentidão na digitação */}
+        <div className="absolute inset-0 pointer-events-none -z-10 bg-[#030712]" />
 
         {/* Grid responsivo de conteúdo */}
         <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 items-center z-10">
@@ -1685,7 +1681,7 @@ const TVPlayer: React.FC = () => {
           </div>
 
           {/* Lado Direito: Card de Pareamento (5 colunas) */}
-          <div className="md:col-span-5 w-full rounded-2xl glass-panel p-8 shadow-2xl relative border border-slate-800/80 hover:border-indigo-500/20 transition-all duration-500 flex flex-col justify-between min-h-[360px] group">
+          <div className="md:col-span-5 w-full rounded-2xl bg-slate-900/90 p-8 shadow-2xl relative border border-slate-800/80 hover:border-indigo-500/20 transition-all duration-500 flex flex-col justify-between min-h-[360px] group">
             {/* Glow no topo do card */}
             <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
 
@@ -2395,17 +2391,13 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
           // TELA DE BOOT CUSTOMIZADA (MÍDIA INDOOR - SMART TV DASHBOARD)
           // ==========================================
           <div className="relative flex h-full w-full items-center justify-center text-white p-6 font-sans select-none">
-            {/* Background Blobs Animados */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute -top-40 -left-40 w-[450px] h-[450px] bg-indigo-600/10 rounded-full blur-[120px] animate-blob-1" />
-              <div className="absolute -bottom-40 -right-40 w-[450px] h-[450px] bg-cyan-600/10 rounded-full blur-[120px] animate-blob-2" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/5 rounded-full blur-[150px] animate-blob-3" />
-            </div>
+            {/* Background simplificado sem blobs para evitar lentidão */}
+            <div className="absolute inset-0 pointer-events-none bg-[#030712]" />
 
             <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-6 z-10">
               
               {/* Painel Lateral Esquerdo: Status & Relógio (4 colunas) */}
-              <div className="md:col-span-4 rounded-2xl glass-panel p-6 border border-slate-800/80 flex flex-col justify-between shadow-2xl min-h-[380px]">
+              <div className="md:col-span-4 rounded-2xl bg-slate-900/90 p-6 border border-slate-800/80 flex flex-col justify-between shadow-2xl min-h-[380px]">
                 <div className="space-y-6">
                   {/* Logo */}
                   <div className="flex items-center gap-2">
@@ -2469,7 +2461,7 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
                 <button
                   onClick={() => { if (playlist.length > 0) setMostrarBoot(false); }}
                   disabled={playlist.length === 0}
-                  className={`relative overflow-hidden text-left p-6 rounded-2xl glass-panel-hover glass-panel border flex flex-col justify-between transition-all duration-300 min-h-[180px] group ${
+                  className={`relative overflow-hidden text-left p-6 rounded-2xl hover:bg-slate-850/80 bg-slate-900/90 border flex flex-col justify-between transition-all duration-300 min-h-[180px] group ${
                     playlist.length === 0 
                       ? 'opacity-50 cursor-not-allowed border-slate-900' 
                       : 'border-slate-800/80 hover:border-indigo-500/40 shadow-lg'
@@ -2532,7 +2524,7 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
                 {/* Card 2: Código da Playlist */}
                 <button
                   onClick={() => setActiveModal('url')}
-                  className="relative overflow-hidden text-left p-6 rounded-2xl glass-panel-hover glass-panel border border-slate-800/80 hover:border-indigo-500/40 flex flex-col justify-between transition-all duration-300 min-h-[180px] group"
+                  className="relative overflow-hidden text-left p-6 rounded-2xl hover:bg-slate-850/80 bg-slate-900/90 border border-slate-800/80 hover:border-indigo-500/40 flex flex-col justify-between transition-all duration-300 min-h-[180px] group"
                 >
                   <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-500/5 rounded-bl-full pointer-events-none group-hover:bg-cyan-500/10 transition-colors" />
                   
@@ -2561,13 +2553,13 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
                 {/* Card 3: Ajustar Rotação */}
                 <button
                   onClick={() => setShowSettings(true)}
-                  className="relative overflow-hidden text-left p-6 rounded-2xl glass-panel-hover glass-panel border border-slate-800/80 hover:border-indigo-500/40 flex flex-col justify-between transition-all duration-300 min-h-[180px] group"
+                  className="relative overflow-hidden text-left p-6 rounded-2xl hover:bg-slate-850/80 bg-slate-900/90 border border-slate-800/80 hover:border-indigo-500/40 flex flex-col justify-between transition-all duration-300 min-h-[180px] group"
                 >
                   <div className="absolute top-0 right-0 w-20 h-20 bg-violet-500/5 rounded-bl-full pointer-events-none group-hover:bg-violet-500/10 transition-colors" />
                   
                   <div className="flex justify-between items-start w-full">
                     <div>
-                      <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Tela e Orientação</p>
+                      <p className="text-[10px] font-bold text-violet-450 uppercase tracking-widest">Tela e Orientação</p>
                       <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight mt-1">Ajustar Rotação</h3>
                     </div>
                     <div className="p-2 rounded-lg bg-violet-600/10 border border-violet-500/20 text-violet-400">
@@ -2590,7 +2582,7 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
                 {/* Card 4: Desvincular Aparelho */}
                 <button
                   onClick={handlePlayerUnlink}
-                  className="relative overflow-hidden text-left p-6 rounded-2xl glass-panel-hover glass-panel border border-slate-800/80 hover:border-red-500/20 flex flex-col justify-between transition-all duration-300 min-h-[180px] group"
+                  className="relative overflow-hidden text-left p-6 rounded-2xl hover:bg-slate-850/80 bg-slate-900/90 border border-slate-800/80 hover:border-red-500/20 flex flex-col justify-between transition-all duration-300 min-h-[180px] group"
                 >
                   <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/5 rounded-bl-full pointer-events-none group-hover:bg-red-500/10 transition-colors" />
                   
