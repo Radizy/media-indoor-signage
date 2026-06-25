@@ -27,11 +27,15 @@ public class MainActivity extends BridgeActivity {
         checkAndRequestOverlayPermission();
 
         // Start background auto-launch checker service as foreground service on Oreo+
-        Intent serviceIntent = new Intent(this, AutoLaunchService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent);
-        } else {
-            startService(serviceIntent);
+        try {
+            Intent serviceIntent = new Intent(this, AutoLaunchService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -74,12 +78,16 @@ public class MainActivity extends BridgeActivity {
 
     private void checkAndRequestOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName())
-                );
-                startActivityForResult(intent, OVERLAY_PERMISSION_REQ_CODE);
+            try {
+                if (!Settings.canDrawOverlays(this)) {
+                    Intent intent = new Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName())
+                    );
+                    startActivityForResult(intent, OVERLAY_PERMISSION_REQ_CODE);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
