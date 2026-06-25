@@ -2184,7 +2184,8 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
   const [orientacao, setOrientacao] = useState<'horizontal' | 'vertical' | 'horizontal-invertido' | 'vertical-invertido'>(() => {
     return (localStorage.getItem('tv_local_rotation') as any) || 'horizontal';
   });
-  const [playlist, setPlaylist] = useState<any[]>([]);
+  const [playlistCarregada, setPlaylistCarregada] = useState<any[]>([]);
+  const [playlistExibida, setPlaylistExibida] = useState<any[]>([]);
   const [activePlaylistInfo, setActivePlaylistInfo] = useState<{ id: string; nome: string; codigo: string } | null>(null);
   const [indiceAtual, setIndiceAtual] = useState(0);
 
@@ -2284,18 +2285,26 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
 
   // Mapeamento de URLs para cache offline
   const mediaUrls = useMemo(() => {
-    return playlist.map((item) => item.midias?.url_arquivo).filter(Boolean);
-  }, [playlist]);
-  const { cachedUrls } = useMediaCache(mediaUrls);
+    return playlistCarregada.map((item) => item.midias?.url_arquivo).filter(Boolean);
+  }, [playlistCarregada]);
+  const { cachedUrls, loading, progress } = useMediaCache(mediaUrls);
+
+  // Double-buffering: atualiza a playlist exibida na tela apenas quando o cache do novo carregamento estiver 100% concluído,
+  // ou se o player estiver na tela de boot. Isso impede interrupções brutas ou streaming lento de vídeos novos.
+  useEffect(() => {
+    if (mostrarBoot || !loading) {
+      setPlaylistExibida(playlistCarregada);
+    }
+  }, [loading, playlistCarregada, mostrarBoot]);
 
   // Filtra as mídias da playlist para o dia da semana atual (0 = Domingo, 1 = Segunda, etc.)
   const diaSemanaAtual = localTime.getDay();
   const playlistFiltrada = useMemo(() => {
-    return playlist.filter((item) => {
+    return playlistExibida.filter((item) => {
       if (!item.dias_semana) return true;
       return item.dias_semana.includes(diaSemanaAtual);
     });
-  }, [playlist, diaSemanaAtual]);
+  }, [playlistExibida, diaSemanaAtual]);
 
 
 
@@ -2309,7 +2318,7 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
     }
 
     if (countdown <= 0) {
-      if (playlist.length > 0) {
+      if (playlistCarregada.length > 0) {
         setMostrarBoot(false);
       }
       return;
@@ -2320,7 +2329,7 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [mostrarBoot, countdown, activeModal, showSettings, playlist.length]);
+  }, [mostrarBoot, countdown, activeModal, showSettings, playlistCarregada.length]);
 
   // Intercepta botão de Voltar físico no controle remoto (TV Box/Android TV)
   useEffect(() => {
@@ -2406,7 +2415,7 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
 
       // 2. Não há Fallback! A playlist deve vir vazia se não estiver vinculada diretamente.
       if (!targetPlaylistId) {
-        setPlaylist([]);
+        setPlaylistCarregada([]);
         setActivePlaylistInfo(null);
         return;
       }
@@ -2421,7 +2430,7 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
         .order('ordem', { ascending: true });
 
       if (itens) {
-        setPlaylist(itens);
+        setPlaylistCarregada(itens);
         setIndiceAtual((prev) => (prev >= itens.length ? 0 : prev));
       }
     } catch (err) {
@@ -2650,10 +2659,10 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
                 
                 {/* Card 1: Iniciar Player (Padrão/Countdown) */}
                 <button
-                  onClick={() => { if (playlist.length > 0) setMostrarBoot(false); }}
-                  disabled={playlist.length === 0}
+                  onClick={() => { if (playlistCarregada.length > 0) setMostrarBoot(false); }}
+                  disabled={playlistCarregada.length === 0}
                   className={`relative overflow-hidden text-left p-6 rounded-2xl hover:bg-slate-850/80 bg-slate-900/90 border flex flex-col justify-between transition-all duration-300 min-h-[180px] group ${
-                    playlist.length === 0 
+                    playlistCarregada.length === 0 
                       ? 'opacity-50 cursor-not-allowed border-slate-900' 
                       : 'border-slate-800/80 hover:border-indigo-500/40 shadow-lg'
                   }`}
@@ -2666,7 +2675,7 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
                       <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight mt-1">Iniciar Player</h3>
                     </div>
                     {/* Anel Circular de Contagem Regressiva em SVG */}
-                    {playlist.length > 0 && !(activeModal || showSettings) && (
+                    {playlistCarregada.length > 0 && !(activeModal || showSettings) && (
                       <div className="relative flex items-center justify-center w-11 h-11">
                         <svg className="w-11 h-11 transform -rotate-90">
                           {/* Background Circle */}
@@ -2702,12 +2711,12 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
 
                   <div className="space-y-1.5 mt-4">
                     <p className="text-xs text-slate-400 line-clamp-1">
-                      {playlist.length > 0 
+                      {playlistCarregada.length > 0 
                         ? `Playlist ativa: ${activePlaylistInfo?.nome || 'Padrão'}` 
                         : 'Nenhuma playlist sincronizada'}
                     </p>
                     <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-indigo-400 bg-indigo-950/45 px-2 py-0.5 rounded border border-indigo-900/35 uppercase tracking-wider">
-                      {playlist.length} {playlist.length === 1 ? 'Mídia' : 'Mídias'}
+                      {playlistCarregada.length} {playlistCarregada.length === 1 ? 'Mídia' : 'Mídias'}
                     </span>
                   </div>
                 </button>
@@ -2801,6 +2810,26 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
 
             </div>
           </div>
+        ) : (!mostrarBoot && loading && playlistExibida.length === 0) ? (
+          // ==========================================
+          // TELA LEVE DE CARREGAMENTO INICIAL DO CACHE (0% a 100%)
+          // ==========================================
+          <div className="flex h-full w-full flex-col items-center justify-center bg-[#030712] text-slate-400 p-6 text-center select-none font-sans">
+            <Monitor className="h-10 w-10 text-indigo-500/80 mb-4 animate-pulse" />
+            <p className="text-sm font-bold text-slate-200">Sincronizando Playlist...</p>
+            <p className="text-xs text-slate-550 mt-1">Baixando arquivos para reprodução offline.</p>
+            
+            {/* Barra de Progresso Estilizada e Leve */}
+            <div className="w-full max-w-xs bg-slate-900 border border-slate-800 rounded-full h-3.5 mt-5 overflow-hidden">
+              <div 
+                className="bg-indigo-500 h-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <span className="text-[11px] font-mono font-black text-indigo-400 mt-2">
+              {progress}%
+            </span>
+          </div>
         ) : playlistFiltrada.length === 0 ? (
           // ==========================================
           // TELA DE FALLBACK SEM PROGRAMAÇÃO ATIVA PARA O DIA
@@ -2808,7 +2837,7 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
           <div className="flex h-full w-full flex-col items-center justify-center bg-[#030712] text-slate-400 p-6 text-center select-none font-sans">
             <Monitor className="h-12 w-12 text-slate-700 mb-3 animate-pulse" />
             <p className="text-sm font-bold text-slate-300">Sem Programação Ativa</p>
-            <p className="text-xs text-slate-500 mt-1 max-w-[280px]">Nenhuma mídia desta playlist está programada para ser exibida hoje.</p>
+            <p className="text-xs text-slate-550 mt-1 max-w-[280px]">Nenhuma mídia desta playlist está programada para ser exibida hoje.</p>
             <p className="text-[10px] font-mono text-indigo-400 mt-4 bg-indigo-950/30 border border-indigo-900/20 px-2.5 py-1 rounded-lg">
               Hoje é {localTime.toLocaleDateString('pt-BR', { weekday: 'long' })}
             </p>

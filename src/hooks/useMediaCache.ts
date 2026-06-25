@@ -8,18 +8,23 @@ import { useState, useEffect, useRef } from 'react';
 export function useMediaCache(urls: string[]) {
   const [cachedUrls, setCachedUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const activeBlobsRef = useRef<Record<string, string>>({});
 
   const urlsString = (urls || []).join(',');
 
   useEffect(() => {
-    if (!urls || urls.length === 0) return;
+    if (!urls || urls.length === 0) {
+      setProgress(100);
+      return;
+    }
 
     let isMounted = true;
     const cacheName = 'indoor-signage-media-cache';
 
     const cacheAllMedia = async () => {
       setLoading(true);
+      setProgress(0);
       const cache = await caches.open(cacheName);
       const newUrls: Record<string, string> = {};
 
@@ -32,6 +37,14 @@ export function useMediaCache(urls: string[]) {
           URL.revokeObjectURL(objectUrl);
         }
       });
+
+      const validUrls = urls.filter(url => url && !url.includes('youtube.com') && !url.includes('youtu.be'));
+      const totalCount = validUrls.length;
+      let completedCount = 0;
+
+      if (totalCount === 0) {
+        setProgress(100);
+      }
 
       // 2. Resolve e cria blobs apenas para novas mídias
       for (const url of urls) {
@@ -47,6 +60,10 @@ export function useMediaCache(urls: string[]) {
           // Se já temos um blob gerado para essa URL na rodada anterior, reutiliza
           if (currentBlobs[url] && currentBlobs[url].startsWith('blob:')) {
             newUrls[url] = currentBlobs[url];
+            completedCount++;
+            if (totalCount > 0 && isMounted) {
+              setProgress(Math.round((completedCount / totalCount) * 100));
+            }
             continue;
           }
 
@@ -69,6 +86,11 @@ export function useMediaCache(urls: string[]) {
         } catch (error) {
           console.error(`Erro ao salvar mídia em cache offline (${url}):`, error);
           newUrls[url] = url; // Fallback
+        }
+
+        completedCount++;
+        if (totalCount > 0 && isMounted) {
+          setProgress(Math.round((completedCount / totalCount) * 100));
         }
       }
 
@@ -104,6 +126,6 @@ export function useMediaCache(urls: string[]) {
     };
   }, []);
 
-  return { cachedUrls, loading };
+  return { cachedUrls, loading, progress };
 }
 
