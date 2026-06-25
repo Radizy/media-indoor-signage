@@ -1798,6 +1798,7 @@ const VideoPlayerItem: React.FC<{
       playsInline
       preload="auto"
       controls={false}
+      autoPlay={isActive}
       loop={loop}
       onEnded={onVideoEnded}
       className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-in-out will-change-transform ${
@@ -1951,6 +1952,8 @@ const PlayerItem: React.FC<PlayerItemProps> = ({ item, isActive, isNext, cachedU
     }
   }, [cachedUrl, isActive]);
 
+  const isVideo = tipo === 'video' || isYouTubeUrl(item.midias?.url_arquivo);
+  if (isVideo && !isActive) return null;
   if (!isActive && !isNext) return null;
 
   if (isYouTubeUrl(item.midias?.url_arquivo)) {
@@ -2232,7 +2235,7 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
 
       if (itens) {
         setPlaylist(itens);
-        setIndiceAtual(0);
+        setIndiceAtual((prev) => (prev >= itens.length ? 0 : prev));
       }
     } catch (err) {
       console.error('Erro ao carregar playlist ativa:', err);
