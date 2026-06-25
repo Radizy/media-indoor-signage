@@ -25,6 +25,9 @@ const apkMimePlugin = () => ({
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), apkMimePlugin()],
+  build: {
+    target: ['es2015', 'chrome60'],
+  },
   preview: {
     allowedHosts: true,
   },
