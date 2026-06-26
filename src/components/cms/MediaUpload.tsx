@@ -46,8 +46,55 @@ export const MediaUpload: React.FC = () => {
     const files = e.target.files;
     if (!files || files.length === 0 || !licenca) return;
 
-    setUploading(true);
     const file = files[0];
+    const isVideo = file.type.startsWith('video/');
+
+    if (isVideo) {
+      // 1. Validar tamanho do arquivo (Aviso se maior que 100MB)
+      const sizeMB = file.size / (1024 * 1024);
+      if (sizeMB > 100) {
+        const confirmar = window.confirm(
+          `Atenção: Este arquivo de vídeo é muito grande (${sizeMB.toFixed(1)} MB).\nVídeos acima de 100 MB podem causar lentidão ou travar aparelhos de TV Box mais simples (como o Mi Stick).\nDeseja continuar mesmo assim?`
+        );
+        if (!confirmar) return;
+      }
+
+      // 2. Validar resolução do vídeo (Aviso se maior que 1080p)
+      try {
+        const videoElement = document.createElement('video');
+        videoElement.preload = 'metadata';
+        videoElement.src = URL.createObjectURL(file);
+
+        await new Promise<void>((resolve, reject) => {
+          videoElement.onloadedmetadata = () => {
+            URL.revokeObjectURL(videoElement.src);
+            const width = videoElement.videoWidth;
+            const height = videoElement.videoHeight;
+            
+            if (width > 1920 || height > 1080) {
+              const confirmar = window.confirm(
+                `Atenção: Este vídeo possui resolução muito alta (${width}x${height} - superior a Full HD 1080p).\nO Mi Stick e TV Boxes de baixo desempenho costumam travar ou engasgar com vídeos em 4K/alta resolução.\nRecomendamos converter o vídeo para 1920x1080 antes de enviar.\nDeseja prosseguir mesmo assim?`
+              );
+              if (!confirmar) {
+                reject(new Error('Upload cancelado devido à alta resolução.'));
+              }
+            }
+            resolve();
+          };
+          videoElement.onerror = () => {
+            URL.revokeObjectURL(videoElement.src);
+            resolve(); // Permite prosseguir se houver erro ao carregar metadados locais
+          };
+        });
+      } catch (err: any) {
+        if (err.message?.includes('cancelado')) {
+          return;
+        }
+        console.warn('Erro ao ler metadados do vídeo:', err);
+      }
+    }
+
+    setUploading(true);
     const fileExt = file.name.split('.').pop();
     const cleanFileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${licenca.id}/${cleanFileName}`;

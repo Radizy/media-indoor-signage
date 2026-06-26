@@ -23,6 +23,7 @@ interface PlaylistItem {
   ordem: number;
   duracao_segundos: number;
   dias_semana?: number[];
+  youtube_res?: string;
   midias: Midia;
 }
 
@@ -274,6 +275,31 @@ export const PlaylistBuilder: React.FC = () => {
     }
   };
 
+  const isYouTubeUrl = (url: string) => {
+    if (!url) return false;
+    return url.includes('youtube.com') || url.includes('youtu.be') || url.trim().length === 11;
+  };
+
+  const handleMudarYoutubeRes = async (itemId: string, resolucao: string) => {
+    try {
+      const { error: updateError } = await supabase
+        .from('playlist_itens')
+        .update({ youtube_res: resolucao })
+        .eq('id', itemId);
+
+      if (updateError) throw updateError;
+
+      setPlaylistItens((prev) =>
+        prev.map((item) =>
+          item.id === itemId ? { ...item, youtube_res: resolucao } : item
+        )
+      );
+    } catch (err: any) {
+      console.error('Erro ao atualizar resolução do YouTube:', err);
+      setError(err.message || 'Falha ao atualizar resolução do vídeo.');
+    }
+  };
+
   const moverItem = async (index: number, direcao: 'up' | 'down') => {
     if (!selectedPlaylist) return;
     const novoIndex = direcao === 'up' ? index - 1 : index + 1;
@@ -437,6 +463,21 @@ export const PlaylistBuilder: React.FC = () => {
                             onChange={(e) => handleMudarDuracao(item.id, parseInt(e.target.value))}
                             className="w-8 text-[11px] text-indigo-300 font-bold bg-transparent text-center focus:outline-none"
                           />
+                        </div>
+                      ) : isYouTubeUrl(item.midias.url_arquivo) ? (
+                        <div className="flex items-center gap-1 mr-1 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-850">
+                          <span className="text-[9px] text-slate-500">Res:</span>
+                          <select
+                            value={item.youtube_res || 'default'}
+                            onChange={(e) => handleMudarYoutubeRes(item.id, e.target.value)}
+                            className="bg-transparent text-[10px] text-indigo-300 font-bold focus:outline-none border-none cursor-pointer"
+                          >
+                            <option value="default" className="bg-slate-900 text-slate-200">Auto</option>
+                            <option value="medium" className="bg-slate-900 text-slate-200">360p</option>
+                            <option value="large" className="bg-slate-900 text-slate-200">480p</option>
+                            <option value="hd720" className="bg-slate-900 text-slate-200">720p</option>
+                            <option value="hd1080" className="bg-slate-900 text-slate-200">1080p</option>
+                          </select>
                         </div>
                       ) : (
                         <span className="text-[10px] text-slate-500 mr-2 bg-slate-950/50 px-1.5 py-0.5 rounded border border-slate-850">Vídeo</span>

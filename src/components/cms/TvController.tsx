@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../App';
-import { Monitor, Unlink, RotateCw, Loader2, Check } from 'lucide-react';
+import { Monitor, Unlink, RotateCw, Loader2, Check, Film, Image } from 'lucide-react';
 
 interface TV {
   id: string;
   codigo_pin: string;
-  orientacao: 'horizontal' | 'vertical';
+  orientacao: 'horizontal' | 'vertical' | 'horizontal-invertido' | 'vertical-invertido';
   dispositivo_id: string;
   status: 'pendente' | 'pareado';
+  ultimo_ping?: string;
+  midia_ativa_nome?: string;
+  midia_ativa_tipo?: string;
+  app_versao?: string;
+  nome?: string;
 }
 
 export const TvController: React.FC = () => {
@@ -107,9 +112,21 @@ export const TvController: React.FC = () => {
     }
   };
 
-  const handleAlternarOrientacao = async (id: string, orientacaoAtual: 'horizontal' | 'vertical') => {
+  const handleAlternarOrientacao = async (
+    id: string,
+    orientacaoAtual: 'horizontal' | 'vertical' | 'horizontal-invertido' | 'vertical-invertido'
+  ) => {
     setError('');
-    const novaOrientacao = orientacaoAtual === 'horizontal' ? 'vertical' : 'horizontal';
+    let novaOrientacao: 'horizontal' | 'vertical' | 'horizontal-invertido' | 'vertical-invertido';
+    if (orientacaoAtual === 'horizontal') {
+      novaOrientacao = 'vertical';
+    } else if (orientacaoAtual === 'vertical') {
+      novaOrientacao = 'horizontal-invertido';
+    } else if (orientacaoAtual === 'horizontal-invertido') {
+      novaOrientacao = 'vertical-invertido';
+    } else {
+      novaOrientacao = 'horizontal';
+    }
     try {
       const { error: updateError } = await supabase
         .from('tvs')
@@ -150,6 +167,13 @@ export const TvController: React.FC = () => {
       console.error('Erro ao desvincular:', err);
       setError('Falha ao desvincular tela.');
     }
+  };
+
+  const isOnline = (ultimoPing: string | undefined) => {
+    if (!ultimoPing) return false;
+    const pingTime = new Date(ultimoPing).getTime();
+    const now = new Date().getTime();
+    return now - pingTime < 600000; // 10 minutos (já que o ping ocorre a cada 5)
   };
 
   return (
@@ -206,10 +230,32 @@ export const TvController: React.FC = () => {
                       <span className="text-[10px] text-slate-500 font-mono block">ID: {tv.dispositivo_id.substring(0, 8)}...</span>
                     </div>
                   </div>
-                  <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                    Pareado
-                  </span>
+                  {isOnline(tv.ultimo_ping) ? (
+                    <span className="bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.15)] animate-pulse">
+                      <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                      Online
+                    </span>
+                  ) : (
+                    <span className="bg-slate-950 text-slate-500 border border-slate-850 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-slate-600" />
+                      Offline
+                    </span>
+                  )}
                 </div>
+
+                {isOnline(tv.ultimo_ping) && tv.midia_ativa_nome && (
+                  <div className="bg-slate-950/60 border border-slate-850 rounded-lg p-2 text-left">
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Reproduzindo agora</p>
+                    <p className="text-xs font-semibold text-indigo-300 mt-0.5 truncate flex items-center gap-1.5">
+                      {tv.midia_ativa_tipo === 'video' ? (
+                        <Film className="h-3.5 w-3.5 shrink-0" />
+                      ) : (
+                        <Image className="h-3.5 w-3.5 shrink-0" />
+                      )}
+                      {tv.midia_ativa_nome}
+                    </p>
+                  </div>
+                )}
 
                 <div className="flex gap-2 pt-2 border-t border-slate-850">
                   <button

@@ -1952,11 +1952,13 @@ const VideoPlayerItem: React.FC<{
 }> = ({ cachedUrl, isActive, onVideoEnded, loop }) => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [playingUrl, setPlayingUrl] = useState(cachedUrl);
+  const [isReady, setIsReady] = useState(false);
 
   // Evita interrupções no player de vídeo se a URL do cache mudar enquanto ele está rodando (bloqueia o update da URL enquanto ativo)
   useEffect(() => {
     if (!isActive) {
       setPlayingUrl(cachedUrl);
+      setIsReady(false);
     }
   }, [cachedUrl, isActive]);
 
@@ -1974,6 +1976,7 @@ const VideoPlayerItem: React.FC<{
       });
     } else {
       video.pause();
+      setIsReady(false);
     }
   }, [isActive, playingUrl]);
 
@@ -1988,8 +1991,13 @@ const VideoPlayerItem: React.FC<{
       autoPlay={isActive}
       loop={loop}
       onEnded={onVideoEnded}
-      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-in-out will-change-transform ${
-        isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
+      onPlaying={() => setIsReady(true)}
+      onError={(e) => {
+        console.error('Erro de reprodução de vídeo nativo (pulando):', e);
+        onVideoEnded();
+      }}
+      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ease-in-out will-change-transform ${
+        isActive && isReady ? 'opacity-100 z-10' : 'opacity-0 z-0'
       }`}
       style={{ transform: 'translate3d(0, 0, 0)', backfaceVisibility: 'hidden' }}
     />
@@ -2006,7 +2014,8 @@ const YouTubePlayerItem: React.FC<{
   videoUrl: string;
   isActive: boolean;
   onVideoEnded: () => void;
-}> = ({ videoUrl, isActive, onVideoEnded }) => {
+  youtubeRes?: string;
+}> = ({ videoUrl, isActive, onVideoEnded, youtubeRes }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const playerRef = React.useRef<any>(null);
   const [apiReady, setApiReady] = useState(!!(window as any).YT);
@@ -2070,6 +2079,13 @@ const YouTubePlayerItem: React.FC<{
         events: {
           onReady: (event: any) => {
             playerRef.current = event.target;
+            if (youtubeRes && youtubeRes !== 'default') {
+              try {
+                event.target.setPlaybackQuality(youtubeRes);
+              } catch (e) {
+                console.warn('Erro ao definir qualidade do YouTube:', e);
+              }
+            }
             if (isActive) {
               event.target.playVideo();
             } else {
@@ -2080,6 +2096,10 @@ const YouTubePlayerItem: React.FC<{
             if (event.data === 0) {
               onVideoEnded();
             }
+          },
+          onError: (event: any) => {
+            console.error('Erro de reprodução no player do YouTube (pulando):', event.data);
+            onVideoEnded();
           }
         }
       });
@@ -2149,6 +2169,7 @@ const PlayerItem: React.FC<PlayerItemProps> = ({ item, isActive, isNext, cachedU
         videoUrl={item.midias.url_arquivo}
         isActive={isActive}
         onVideoEnded={onVideoEnded}
+        youtubeRes={item.youtube_res}
       />
     );
   }
@@ -2509,6 +2530,44 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
   // Loop da playlist (exibindo apenas mídias agendadas para o dia atual)
   const activeIndex = playlistFiltrada.length > 0 ? (indiceAtual % playlistFiltrada.length) : 0;
 
+  const activeItemRef = React.useRef<any>(null);
+  useEffect(() => {
+    activeItemRef.current = playlistFiltrada[activeIndex];
+  }, [playlistFiltrada, activeIndex]);
+
+  // Heartbeat (batimento cardíaco) a cada 5 minutos para monitorar a saúde da TV Box
+  useEffect(() => {
+    if (!dispositivoId) return;
+
+    const enviarHeartbeat = async () => {
+      const activeItem = activeItemRef.current;
+      const midiaNome = activeItem?.midias?.nome || 'Inativo (Sem mídia)';
+      const midiaTipo = activeItem?.midias?.tipo || 'outro';
+
+      try {
+        await supabase
+          .from('tvs')
+          .update({
+            ultimo_ping: new Date().toISOString(),
+            midia_ativa_nome: midiaNome,
+            midia_ativa_tipo: midiaTipo,
+            app_versao: '1.0.0'
+          })
+          .eq('dispositivo_id', dispositivoId);
+      } catch (err) {
+        console.error('Erro ao enviar heartbeat da TV:', err);
+      }
+    };
+
+    // Envia o heartbeat inicial
+    enviarHeartbeat();
+
+    // Intervalo fixo de 5 minutos (300.000 ms)
+    const intervalId = setInterval(enviarHeartbeat, 300000);
+
+    return () => clearInterval(intervalId);
+  }, [dispositivoId]);
+
   useEffect(() => {
     if (mostrarBoot || playlistFiltrada.length === 0) return;
 
@@ -2864,6 +2923,14 @@ const ActivePlayer: React.FC<{ licencaId: string; dispositivoId: string; onUnlin
               />
             );
           })
+        )}
+
+        {/* Indicador de sincronização em segundo plano */}
+        {!mostrarBoot && loading && playlistExibida.length > 0 && (
+          <div className="absolute bottom-6 left-6 z-50 flex items-center gap-2 bg-slate-950/80 border border-slate-800/80 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] text-slate-300 font-sans shadow-lg">
+            <Loader2 className="h-3 w-3 text-indigo-400 animate-spin" />
+            <span>Sincronizando mídias offline ({progress}%)</span>
+          </div>
         )}
       </div>
 
