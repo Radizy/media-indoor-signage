@@ -27,6 +27,21 @@ import {
   User
 } from 'lucide-react';
 
+// Helper para verificar se a licença está expirada considerando o final do dia
+export const isLicencaExpirada = (dataVencimento?: string | null): boolean => {
+  if (!dataVencimento) return false;
+  let vencimentoTimestamp: number;
+  const trimmed = dataVencimento.trim();
+  // Se for formato apenas de data YYYY-MM-DD, considera até 23:59:59.999 do dia local
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const [year, month, day] = trimmed.split('-').map(Number);
+    vencimentoTimestamp = new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
+  } else {
+    vencimentoTimestamp = new Date(trimmed).getTime();
+  }
+  return vencimentoTimestamp < Date.now();
+};
+
 // ----------------------------------------------------
 // 1. CONTEXTO DE AUTENTICAÇÃO E LICENCIAMENTO (CORE)
 // ----------------------------------------------------
@@ -35,7 +50,7 @@ interface AuthContextType {
   licenca: any | null;
   loading: boolean;
   login: (codigo: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
+  logout: (clearSavedTvCode?: boolean) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,18 +89,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .maybeSingle();
 
-      if (error || !data) throw error || new Error('Licença não encontrada');
-
-      const vencimento = new Date(data.data_vencimento).getTime();
-      if (vencimento < Date.now() || data.status !== 'ativa') {
-        alert('Esta licença expirou ou foi suspensa.');
-        await logout();
-      } else {
-        setLicenca(data);
+      if (error) {
+        console.warn('Oscilação de rede ao buscar licença, mantendo sessão ativa:', error);
+        return;
       }
+
+      if (!data) {
+        console.warn('Licença inexistente no banco.');
+        await logout(true);
+        return;
+      }
+
+      setLicenca(data);
     } catch (err) {
-      console.error('Erro ao carregar licença:', err);
-      await logout();
+      console.warn('Erro temporário de conexão ao carregar licença:', err);
     } finally {
       setLoading(false);
     }
@@ -105,27 +122,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: true };
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    localStorage.removeItem('tv_activation_code');
+  const logout = async (clearSavedTvCode: boolean = false) => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('Erro ao encerrar sessão Supabase:', err);
+    }
+    if (clearSavedTvCode) {
+      localStorage.removeItem('tv_activation_code');
+    }
     setSession(null);
     setLicenca(null);
   };
 
-  // Verificação periódica de validade (a cada 30 segundos)
+  // Verificação periódica de validade da licença (a cada 60 segundos)
   useEffect(() => {
-    if (!licenca) return;
+    if (!session?.user?.id) return;
 
-    const interval = setInterval(() => {
-      const vencimento = new Date(licenca.data_vencimento).getTime();
-      if (vencimento < Date.now()) {
-        alert('Licença expirou durante o uso. Desconectando...');
-        logout();
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('licencas')
+          .select('status, data_vencimento')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (!error && data) {
+          setLicenca((prev: any) => (prev ? { ...prev, ...data } : data));
+        }
+      } catch (err) {
+        // Silencioso em caso de falha de rede da TV
       }
-    }, 30000);
+    }, 60000);
 
     return () => clearInterval(interval);
-  }, [licenca]);
+  }, [session?.user?.id]);
 
   return (
     <AuthContext.Provider value={{ session, licenca, loading, login, logout }}>
@@ -1056,7 +1087,7 @@ const CMSDashboard: React.FC = () => {
           </button>
 
           <button
-            onClick={logout}
+            onClick={() => logout()}
             className="flex items-center justify-center gap-1 bg-slate-905 hover:bg-red-950/30 border border-red-900/30 px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 transition-all flex-1 md:flex-none min-w-[90px]"
           >
             <LogOut className="h-3.5 w-3.5" /> <span>Sair</span>
@@ -1656,10 +1687,13 @@ const CMSDashboard: React.FC = () => {
 // 4. PLAYER DE MÍDIA DA TV (TV PLAYER)
 // ----------------------------------------------------
 const TVPlayer: React.FC = () => {
-  const { session, licenca, loading: authLoading, login } = useAuth();
+  const { session, licenca, loading: authLoading, login, logout } = useAuth();
   const [tokenCode, setTokenCode] = useState('');
   const [pairingError, setPairingError] = useState('');
   const [pairingLoading, setPairingLoading] = useState(false);
+  const [savedActivationCode, setSavedActivationCode] = useState<string | null>(() => {
+    return localStorage.getItem('tv_activation_code');
+  });
   const [dispositivoId] = useState(() => {
     let id = localStorage.getItem('tv_dispositivo_id');
     if (!id) {
@@ -1673,6 +1707,7 @@ const TVPlayer: React.FC = () => {
   const [tvLicencaId, setTvLicencaId] = useState<string | null>(null);
 
   const checkTvStatus = async () => {
+    const savedCode = localStorage.getItem('tv_activation_code');
     try {
       const { data, error } = await supabase
         .from('tvs')
@@ -1685,14 +1720,21 @@ const TVPlayer: React.FC = () => {
       if (data && data.status === 'pareado' && data.licenca_id) {
         setTvStatus('pareado');
         setTvLicencaId(data.licenca_id);
+      } else if (savedCode) {
+        // Se temos código salvo na memória da TV, consideramos pareado e aguardamos login
+        setTvStatus('pareado');
       } else {
         setTvStatus('pendente');
         setTvLicencaId(null);
       }
     } catch (err) {
-      console.error('Erro ao verificar status da TV:', err);
-      setTvStatus('pendente');
-      setTvLicencaId(null);
+      console.warn('Erro de rede ao verificar status da TV (mantendo pareamento salvo se existir):', err);
+      if (savedCode) {
+        setTvStatus('pareado');
+      } else {
+        setTvStatus('pendente');
+        setTvLicencaId(null);
+      }
     }
   };
 
@@ -1710,8 +1752,11 @@ const TVPlayer: React.FC = () => {
             setTvStatus('pareado');
             setTvLicencaId(payload.new.licenca_id);
           } else {
-            setTvStatus('pendente');
-            setTvLicencaId(null);
+            const savedCode = localStorage.getItem('tv_activation_code');
+            if (!savedCode) {
+              setTvStatus('pendente');
+              setTvLicencaId(null);
+            }
           }
         }
       )
@@ -1722,28 +1767,56 @@ const TVPlayer: React.FC = () => {
     };
   }, [dispositivoId]);
 
-  // Se houver uma licença vinculada no banco de dados, mas o usuário não estiver logado localmente com a licença correta, tenta o login automático
+  // Se houver um código de ativação salvo, tenta login automático com retentativas contínuas
   useEffect(() => {
-    if (tvStatus === 'pareado' && tvLicencaId) {
-      const savedCode = localStorage.getItem('tv_activation_code');
-      
-      const performAutoLogin = async () => {
-        if (!session || (session && session.user.id !== tvLicencaId)) {
-          if (savedCode) {
-            const res = await login(savedCode);
-            if (!res.success) {
-              console.error('Erro no login automático da TV:', res.error);
-              setTvStatus('pendente');
-            }
-          } else {
+    const savedCode = localStorage.getItem('tv_activation_code');
+    if (!savedCode) return;
+
+    let isCancelled = false;
+    let retryTimeout: any = null;
+
+    const performAutoLogin = async () => {
+      if (session && licenca) {
+        setTvStatus('pareado');
+        setTvLicencaId(session.user.id);
+        return;
+      }
+
+      try {
+        const res = await login(savedCode);
+        if (isCancelled) return;
+
+        if (res.success) {
+          const { data: { session: newSession } } = await supabase.auth.getSession();
+          setTvStatus('pareado');
+          setTvLicencaId(newSession?.user?.id || null);
+        } else {
+          console.warn('Tentativa de login automático da TV falhou:', res.error);
+          // Se for erro de credencial inexistente/inválida (licença deletada no painel admin), limpa o código
+          if (res.error && (res.error.toLowerCase().includes('invalid login credentials') || res.error.toLowerCase().includes('credenciais'))) {
+            localStorage.removeItem('tv_activation_code');
+            setSavedActivationCode(null);
             setTvStatus('pendente');
+            setTvLicencaId(null);
+            return;
           }
+          // Em caso de falha de conexão/rede da TV, tenta novamente em 5 segundos sem perder o código salvo
+          retryTimeout = setTimeout(performAutoLogin, 5000);
         }
-      };
-      
-      performAutoLogin();
-    }
-  }, [tvStatus, tvLicencaId, session, login]);
+      } catch (err) {
+        if (!isCancelled) {
+          retryTimeout = setTimeout(performAutoLogin, 5000);
+        }
+      }
+    };
+
+    performAutoLogin();
+
+    return () => {
+      isCancelled = true;
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
+  }, [savedActivationCode, session, licenca, login]);
 
   const handlePair = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1772,6 +1845,7 @@ const TVPlayer: React.FC = () => {
 
       // Salva no localStorage e efetua login automático
       localStorage.setItem('tv_activation_code', ativacao);
+      setSavedActivationCode(ativacao);
       const res = await login(ativacao);
 
       if (res.success) {
@@ -1789,21 +1863,25 @@ const TVPlayer: React.FC = () => {
     }
   };
 
-  const handleUnlink = () => {
+  const handleUnlink = async () => {
     localStorage.removeItem('tv_activation_code');
+    setSavedActivationCode(null);
     setTvStatus('pendente');
     setTvLicencaId(null);
+    await logout(true);
   };
 
-  if (authLoading || tvStatus === 'loading' || (tvStatus === 'pareado' && (!session || !licenca))) {
+  if (authLoading || tvStatus === 'loading' || (savedActivationCode && (!session || !licenca))) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-black text-white">
-        <p className="text-xl animate-pulse">Carregando Player...</p>
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-black text-white gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+        <p className="text-xl font-medium animate-pulse">Sincronizando Player...</p>
+        <span className="text-xs text-slate-400">Verificando conexão de rede e playlist</span>
       </div>
     );
   }
 
-  if (tvStatus === 'pendente' || !session || !licenca || session.user.id !== tvLicencaId) {
+  if (tvStatus === 'pendente' || !session || !licenca || (tvLicencaId && session.user.id !== tvLicencaId)) {
     return (
       <div className="relative flex h-screen w-screen flex-col items-center justify-center px-6 overflow-hidden text-white bg-[#030712] font-sans select-none">
         {/* Background simplificado sem blobs para evitar lentidão na digitação */}
@@ -2019,6 +2097,8 @@ const YouTubePlayerItem: React.FC<{
   const containerRef = React.useRef<HTMLDivElement>(null);
   const playerRef = React.useRef<any>(null);
   const [apiReady, setApiReady] = useState(!!(window as any).YT);
+  const watchdogTimerRef = React.useRef<any>(null);
+  const bufferingTimerRef = React.useRef<any>(null);
 
   const getVideoId = (url: string) => {
     if (!url) return '';
@@ -2050,6 +2130,17 @@ const YouTubePlayerItem: React.FC<{
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
     }
   }, []);
+
+  const clearAllTimers = () => {
+    if (watchdogTimerRef.current) {
+      clearTimeout(watchdogTimerRef.current);
+      watchdogTimerRef.current = null;
+    }
+    if (bufferingTimerRef.current) {
+      clearTimeout(bufferingTimerRef.current);
+      bufferingTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     if (!apiReady || !videoId || !containerRef.current) return;
@@ -2087,18 +2178,60 @@ const YouTubePlayerItem: React.FC<{
               }
             }
             if (isActive) {
-              event.target.playVideo();
+              try {
+                event.target.playVideo();
+              } catch (err) {
+                console.warn('Erro no play inicial do YouTube:', err);
+              }
             } else {
-              event.target.pauseVideo();
+              try {
+                event.target.pauseVideo();
+              } catch (err) {}
             }
           },
           onStateChange: (event: any) => {
-            if (event.data === 0) {
+            const state = event.data;
+            if (state === 0) {
+              // ENDED
+              clearAllTimers();
               onVideoEnded();
+            } else if (state === 1) {
+              // PLAYING - reproduzindo normalmente
+              clearAllTimers();
+            } else if (state === 2) {
+              // PAUSED - Se pausou sozinho enquanto o slide está ativo, tenta auto-retomada
+              if (isActive) {
+                setTimeout(() => {
+                  try {
+                    if (playerRef.current && typeof playerRef.current.playVideo === 'function') {
+                      playerRef.current.playVideo();
+                    }
+                  } catch (e) {}
+                }, 600);
+              }
+            } else if (state === 3) {
+              // BUFFERING - Watchdog de 12s para não travar a TV em conexão oscilante
+              if (!bufferingTimerRef.current && isActive) {
+                bufferingTimerRef.current = setTimeout(() => {
+                  console.warn('Watchdog: YouTube preso em buffering por 12s. Tentando forçar play...');
+                  try {
+                    if (playerRef.current && typeof playerRef.current.playVideo === 'function') {
+                      playerRef.current.playVideo();
+                    }
+                  } catch (e) {}
+                  setTimeout(() => {
+                    if (isActive) {
+                      console.warn('Watchdog: YouTube não respondeu ao play. Avançando playlist...');
+                      onVideoEnded();
+                    }
+                  }, 3000);
+                }, 12000);
+              }
             }
           },
           onError: (event: any) => {
-            console.error('Erro de reprodução no player do YouTube (pulando):', event.data);
+            console.error('Erro de reprodução no player do YouTube (pulando item):', event.data);
+            clearAllTimers();
             onVideoEnded();
           }
         }
@@ -2109,8 +2242,11 @@ const YouTubePlayerItem: React.FC<{
 
     return () => {
       clearTimeout(timer);
+      clearAllTimers();
       if (player && typeof player.destroy === 'function') {
-        player.destroy();
+        try {
+          player.destroy();
+        } catch (e) {}
       }
       playerRef.current = null;
     };
@@ -2121,11 +2257,32 @@ const YouTubePlayerItem: React.FC<{
     if (!player || typeof player.playVideo !== 'function') return;
 
     if (isActive) {
-      player.seekTo(0, true);
-      player.playVideo();
+      clearAllTimers();
+      try {
+        player.seekTo(0, true);
+        player.playVideo();
+      } catch (e) {}
+
+      // Watchdog geral: se em 15s o vídeo não começar a rodar, avança a fila
+      watchdogTimerRef.current = setTimeout(() => {
+        try {
+          const state = player.getPlayerState?.();
+          if (state !== 1 && state !== 0) {
+            console.warn('Watchdog: YouTube não iniciou em 15s. Avançando playlist...');
+            onVideoEnded();
+          }
+        } catch (e) {
+          onVideoEnded();
+        }
+      }, 15000);
     } else {
-      player.pauseVideo();
+      clearAllTimers();
+      try {
+        player.pauseVideo();
+      } catch (e) {}
     }
+
+    return () => clearAllTimers();
   }, [isActive]);
 
   return (
@@ -3458,7 +3615,7 @@ const AdminDashboard: React.FC = () => {
           <span className="text-sm font-bold tracking-wider text-center sm:text-left">Mídia Indoor - PAINEL ADMINISTRADOR</span>
         </div>
         <button
-          onClick={logout}
+          onClick={() => logout()}
           className="flex items-center justify-center gap-1.5 bg-red-650 hover:bg-red-700 px-3.5 py-2 rounded-lg text-xs font-bold text-white shadow-sm transition w-full sm:w-auto"
         >
           <LogOut className="h-3.5 w-3.5" /> Sair do Admin
@@ -3548,8 +3705,7 @@ const AdminDashboard: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
                     {filteredLicencas.map((lic) => {
-                      const vencimento = new Date(lic.data_vencimento).getTime();
-                      const isExpirada = vencimento < Date.now();
+                      const isExpirada = isLicencaExpirada(lic.data_vencimento);
                       const playlistCount = playlistCounts[lic.id] || 0;
                       
                       return (
@@ -3622,8 +3778,7 @@ const AdminDashboard: React.FC = () => {
               {/* LAYOUT DE CARDS PARA MOBILE */}
               <div className="block md:hidden divide-y divide-slate-100">
                 {filteredLicencas.map((lic) => {
-                  const vencimento = new Date(lic.data_vencimento).getTime();
-                  const isExpirada = vencimento < Date.now();
+                  const isExpirada = isLicencaExpirada(lic.data_vencimento);
                   const playlistCount = playlistCounts[lic.id] || 0;
 
                   return (
