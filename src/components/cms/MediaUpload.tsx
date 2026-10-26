@@ -49,15 +49,15 @@ export const MediaUpload: React.FC = () => {
     const file = files[0];
     const isVideo = file.type.startsWith('video/');
 
+    // 1. Validar tamanho máximo do arquivo (Limite aumentado para 1GB)
+    const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1 GB
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`O arquivo selecionado (${(file.size / (1024 * 1024)).toFixed(1)} MB) ultrapassa o limite máximo permitido de 1 GB.`);
+      e.target.value = '';
+      return;
+    }
+
     if (isVideo) {
-      // 1. Validar tamanho do arquivo (Aviso se maior que 100MB)
-      const sizeMB = file.size / (1024 * 1024);
-      if (sizeMB > 100) {
-        const confirmar = window.confirm(
-          `Atenção: Este arquivo de vídeo é muito grande (${sizeMB.toFixed(1)} MB).\nVídeos acima de 100 MB podem causar lentidão ou travar aparelhos de TV Box mais simples (como o Mi Stick).\nDeseja continuar mesmo assim?`
-        );
-        if (!confirmar) return;
-      }
 
       // 2. Validar resolução do vídeo (Aviso se maior que 1080p)
       try {

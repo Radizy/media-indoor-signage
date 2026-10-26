@@ -35,7 +35,12 @@ export const TvController: React.FC = () => {
         .eq('licenca_id', licenca.id);
 
       if (fetchError) throw fetchError;
-      setTvs(data || []);
+      const sorted = (data || []).sort((a: TV, b: TV) => {
+        const nameA = a.nome || `TV Box (${a.orientacao || 'horizontal'}) - ${a.dispositivo_id.substring(0, 5)}`;
+        const nameB = b.nome || `TV Box (${b.orientacao || 'horizontal'}) - ${b.dispositivo_id.substring(0, 5)}`;
+        return nameA.localeCompare(nameB, 'pt-BR', { numeric: true, sensitivity: 'base' });
+      });
+      setTvs(sorted);
     } catch (err: any) {
       console.error('Erro ao buscar TVs:', err);
     } finally {

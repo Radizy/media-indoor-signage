@@ -411,6 +411,24 @@ const CMSDashboard: React.FC = () => {
     }
   };
 
+  // Obtém o nome exibido de uma TV
+  const getTvDisplayName = (tv: any) => {
+    if (tv.nome && tv.nome.trim()) {
+      return tv.nome.trim();
+    }
+    const shortId = tv.dispositivo_id ? tv.dispositivo_id.substring(0, 5).toUpperCase() : 'DESCONHECIDO';
+    return `TV - ${shortId}`;
+  };
+
+  // Ordena lista de TVs em ordem alfabética (natural)
+  const sortTvsAlphabetically = (list: any[]) => {
+    return [...list].sort((a, b) => {
+      const nameA = getTvDisplayName(a);
+      const nameB = getTvDisplayName(b);
+      return nameA.localeCompare(nameB, 'pt-BR', { numeric: true, sensitivity: 'base' });
+    });
+  };
+
   // Carrega a lista completa de TVs associadas a esta licença
   const fetchTvs = async () => {
     if (!licenca) return;
@@ -421,7 +439,7 @@ const CMSDashboard: React.FC = () => {
         .eq('licenca_id', licenca.id);
 
       if (error) throw error;
-      setTvs(data || []);
+      setTvs(sortTvsAlphabetically(data || []));
     } catch (err) {
       console.error('Erro ao carregar TVs:', err);
     }
@@ -621,8 +639,15 @@ const CMSDashboard: React.FC = () => {
     const files = e.target.files;
     if (!files || files.length === 0 || !currentPlaylist || !licenca) return;
 
-    setUploading(true);
     const file = files[0];
+    const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1 GB
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`O arquivo selecionado (${(file.size / (1024 * 1024)).toFixed(1)} MB) ultrapassa o limite máximo permitido de 1 GB.`);
+      e.target.value = '';
+      return;
+    }
+
+    setUploading(true);
     const fileExt = file.name.split('.').pop();
     const cleanFileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${licenca.id}/${cleanFileName}`;
@@ -842,12 +867,14 @@ const CMSDashboard: React.FC = () => {
 
   // Renderizador do painel lateral ou modal de gerenciamento de TVs
   const renderTvsManagerPanel = (isMobile: boolean = false) => {
+    const sortedTvs = sortTvsAlphabetically(tvs);
+
     return (
       <div className={`glass-panel border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl flex flex-col ${isMobile ? 'h-full bg-slate-950/95' : 'bg-slate-905/40'}`}>
         <header className="px-4.5 py-4 border-b border-slate-850 flex items-center justify-between bg-slate-950/40 shrink-0">
           <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
             <Monitor className="h-4.5 w-4.5 text-indigo-400" />
-            Minhas TVs ({tvs.length})
+            Minhas TVs ({sortedTvs.length})
           </h3>
           {isMobile && (
             <button
@@ -864,7 +891,7 @@ const CMSDashboard: React.FC = () => {
             Direcione a programação e gerencie o nome de cada tela em tempo real.
           </p>
 
-          {tvs.length === 0 ? (
+          {sortedTvs.length === 0 ? (
             <div className="text-center py-8 text-slate-500 flex flex-col items-center gap-2">
               <Monitor className="h-8 w-8 text-slate-650 opacity-60 animate-pulse" />
               <p className="text-xs font-bold text-slate-400">Nenhuma TV conectada</p>
@@ -874,8 +901,8 @@ const CMSDashboard: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {tvs.map((tv) => {
-                const displayName = tv.nome || `TV - ${tv.dispositivo_id.substring(0, 5).toUpperCase()}`;
+              {sortedTvs.map((tv) => {
+                const displayName = getTvDisplayName(tv);
                 const isOnline = tv.status === 'pareado';
                 return (
                   <div 
@@ -1142,7 +1169,7 @@ const CMSDashboard: React.FC = () => {
                     Requisitos e Limites de Mídia
                   </h3>
                   <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-400 font-medium">
-                    <span>• Arquivos até <strong className="text-slate-100">99MB</strong></span>
+                    <span>• Arquivos até <strong className="text-slate-100">1GB</strong></span>
                     <span>• Vídeos em <strong className="text-slate-100">MP4</strong></span>
                     <span>• Imagens em <strong className="text-slate-100">JPG ou PNG</strong></span>
                   </div>
@@ -1522,7 +1549,7 @@ const CMSDashboard: React.FC = () => {
                 </span>
               </div>
 
-              {tvs.filter(t => t.playlist_id === activeTvPlaylistId).length === 0 ? (
+              {sortTvsAlphabetically(tvs.filter(t => t.playlist_id === activeTvPlaylistId)).length === 0 ? (
                 // TV pendente de pareamento
                 <div className="space-y-4">
                   <div className="p-3.5 bg-amber-950/20 border border-amber-900/30 text-amber-300 text-xs rounded-xl font-medium leading-relaxed">
@@ -1537,7 +1564,7 @@ const CMSDashboard: React.FC = () => {
               ) : (
                 // TVs pareadas e ativas
                 <div className="divide-y divide-slate-850 max-h-72 overflow-y-auto pr-1 space-y-1">
-                  {tvs.filter(t => t.playlist_id === activeTvPlaylistId).map((tv) => (
+                  {sortTvsAlphabetically(tvs.filter(t => t.playlist_id === activeTvPlaylistId)).map((tv) => (
                     <div key={tv.id} className="py-3.5 flex flex-col gap-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

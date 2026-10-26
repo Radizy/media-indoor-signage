@@ -37,7 +37,7 @@ Esta pasta contém os scripts SQL executados no Supabase para montar a estrutura
 *   **`20260623000002_admin_and_limits.sql`:**
     *   Cria o perfil do Administrador Master do sistema (`vini2fernandes@gmail.com`) com acesso irrestrito às licenças.
     *   Configura limites personalizados de playlists por cliente (ex: padrão de 10 playlists).
-*   **Outros arquivos de migração** definem regras como permissões de edição de tokens do cliente e conversão de credenciais para letras minúsculas (evitando erros de digitação ao fazer login).
+*   **Outros arquivos de migração** definem regras como permissões de edição de tokens do cliente, conversão de credenciais para letras minúsculas (evitando erros de digitação ao fazer login) e ajuste do limite de upload do bucket de armazenamento para **1 GB** por arquivo.
 
 ### B. Arquivos de Configuração e Entrada
 *   **`package.json`**: Declara as dependências do projeto (React 18, React Router Dom, Capacitor para Android, Supabase JS, TailwindCSS para estilização premium e Lucide-react para ícones).
@@ -53,7 +53,7 @@ Esta pasta contém os scripts SQL executados no Supabase para montar a estrutura
     *   Ignora links externos dinâmicos como streams do YouTube que requerem conexão de internet direta para reprodução.
 *   **`src/components/cms/` (Componentes do Painel do Cliente):**
     *   **`PlaylistBuilder.tsx`**: Tela interativa onde o cliente cria playlists, adiciona mídias da biblioteca, arrasta e reordena os itens (cima/baixo) e edita a duração das imagens.
-    *   **`MediaUpload.tsx`**: Responsável pelo envio de novas imagens ou vídeos, convertendo os arquivos em URLs do Supabase Storage.
+    *   **`MediaUpload.tsx`**: Responsável pelo envio de novas imagens ou vídeos (até **1 GB** por arquivo), convertendo os arquivos em URLs do Supabase Storage. Possui validação de tamanho máximo e verificação de resolução/codec para vídeos.
 *   **`src/App.tsx` (Arquivo Central do Sistema):**
     *   Este arquivo contém a estrutura base de rotas da aplicação (`/login`, `/`, `/tv`, `/admin`). Devido à arquitetura enxuta, ele engloba sub-dashboards em blocos de código integrados para reduzir a latência de carregamento:
         1.  **`AuthProvider`**: Contexto global de autenticação. Realiza a validação periódica da licença do cliente (a cada 30 segundos) para desconectar imediatamente TVs ou painéis caso a assinatura expire ou seja suspensa.
@@ -71,9 +71,9 @@ O cliente acessa a URL do sistema (ou o aplicativo no celular/computador) e digi
 
 ### Passo 2: Gerenciamento e Upload de Mídia
 No painel de controle, o cliente pode:
-1.  Fazer upload de imagens (**JPG/PNG**) ou vídeos (**MP4** com codec H.264 recomendado).
+1.  Fazer upload de imagens (**JPG/PNG**) ou vídeos (**MP4** com codec H.264 recomendado), com limite máximo de **1 GB** por arquivo.
 2.  Adicionar links diretos de vídeos públicos do **YouTube**.
-3.  O sistema automaticamente exibe alertas para lembrar o cliente de evitar arquivos muito pesados ou com qualidades excessivas (como 4K a 60fps) que travariam TV Boxes comerciais modestas.
+3.  O sistema automaticamente exibe alertas para lembrar o cliente de evitar arquivos com qualidades excessivas (como 4K a 60fps) que travariam TV Boxes comerciais modestas.
 
 ### Passo 3: Criação de Playlists
 O cliente organiza suas mídias criando Playlists.
@@ -89,6 +89,7 @@ Para conectar uma tela na loja física do cliente:
 4.  Ao digitar o código correspondente no player da TV Box, a vinculação é selada no banco de dados em tempo real.
 5.  A TV Box começará a rodar a playlist em loop. Se o painel alterar a playlist, a TV se atualiza imediatamente.
 6.  O painel permite definir o sentido da tela (Horizontal, Vertical, Horizontal Invertido, Vertical Invertido) e o player da TV gira fisicamente a exibição sem a necessidade de mexer nas configurações físicas do aparelho de TV.
+7.  A lista de TVs no painel lateral (coluna da direita) é exibida em **ordem alfabética permanente**, garantindo que a sequência das telas não se altere ao atualizar playlists ou ao receber atualizações em tempo real.
 
 ---
 
